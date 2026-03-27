@@ -2,7 +2,6 @@ package com.example.authservice.service;
 
 import java.util.List;
 
-import com.example.authservice.auth.AccountInfo;
 import com.example.authservice.service.dto.UserLoginDTO;
 
 public interface AccountService {
@@ -28,11 +27,10 @@ public interface AccountService {
     boolean updatePassword(String username, String newPassword);
 
     /**
-     * 获取登录信息缓存
-     * @param username 用户名
-     * @return 用户信息缓存
+     * 注销当前登录会话
+     * @return 注销结果
      */
-    AccountInfo getAccountInfo(String username);
+    boolean logout();
 
     /**
      * 注册用户

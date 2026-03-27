@@ -1,3 +1,4 @@
+use auth;
 -- account 表
 CREATE TABLE account (
     id BIGINT NOT NULL AUTO_INCREMENT,

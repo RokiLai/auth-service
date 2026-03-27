@@ -3,8 +3,9 @@ package com.example.authservice.config;
 import com.example.authservice.annotation.PassToken;
 import com.example.authservice.auth.AccountContextHolder;
 import com.example.authservice.auth.AccountInfo;
+import com.example.authservice.auth.LoginSession;
+import com.example.authservice.domain.service.SessionStore;
 import com.example.authservice.exception.AuthErrorCode;
-import com.example.authservice.service.AccountService;
 import com.example.authservice.util.JwtUtil;
 import com.roki.exception.BusinessException;
 
@@ -30,7 +31,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private AccountService accountService;
+    private SessionStore sessionStore;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -61,14 +62,28 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         try {
-            String username = jwtUtil.parseUsername(token);
-            logger.info("Token 验证通过，用户名: {}", username);
-            AccountInfo accountInfo = accountService.getAccountInfo(username);
-            if (accountInfo == null || !Objects.equals(accountInfo.getToken(), token)) {
+            String sessionId = jwtUtil.parseSessionId(token);
+            if (sessionId == null || sessionId.isBlank()) {
+                logger.warn("Token 缺少会话标识");
+                throw new BusinessException(AuthErrorCode.TOKEN_INVALID);
+            }
+
+            LoginSession loginSession = sessionStore.getBySessionId(sessionId);
+            if (loginSession == null || !Objects.equals(loginSession.getToken(), token)) {
                 logger.warn("Token 已过期");
                 throw new BusinessException(AuthErrorCode.TOKEN_EXPIRED);
             }
-            request.setAttribute("username", username);
+
+            AccountInfo accountInfo = new AccountInfo();
+            accountInfo.setId(loginSession.getAccountId());
+            accountInfo.setUsername(loginSession.getUsername());
+            accountInfo.setToken(loginSession.getToken());
+            accountInfo.setRole(loginSession.getRoles());
+            accountInfo.setPermissions(loginSession.getPermissions());
+
+            logger.info("Token 验证通过，用户: {}, sessionId: {}", loginSession.getUsername(), sessionId);
+            request.setAttribute("username", loginSession.getUsername());
+            request.setAttribute("sessionId", sessionId);
             AccountContextHolder.set(accountInfo);
         } catch (JwtException e) {
             logger.error("Token 验证失败: {}", e.getMessage());
@@ -76,5 +91,13 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) {
+        AccountContextHolder.clear();
     }
 }

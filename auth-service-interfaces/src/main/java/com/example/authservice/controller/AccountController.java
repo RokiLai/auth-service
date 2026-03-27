@@ -44,4 +44,10 @@ public class AccountController {
         return Result.success(true);
     }
 
+    @PostMapping("/logout")
+    public Result<Boolean> logout() {
+        accountService.logout();
+        return Result.success(true);
+    }
+
 }
