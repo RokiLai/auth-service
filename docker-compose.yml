@@ -41,7 +41,7 @@ services:
     networks:
       - auth-net
 
-  login-web:
+  auth-web:
     build:
       context: ../../vue-auth-service
       dockerfile: Dockerfile
