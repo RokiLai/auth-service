@@ -2,6 +2,9 @@ package com.example.authservice.controller;
 
 import com.example.authservice.config.JwtInterceptor;
 import com.example.authservice.config.WebConfig;
+import com.example.authservice.auth.IdentityContext;
+import com.example.authservice.auth.IdentityContextHolder;
+import com.example.authservice.domain.identity.model.CurrentIdentity;
 import com.example.authservice.domain.identity.model.IdentityAccount;
 import com.example.authservice.domain.identity.model.IdentitySession;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
@@ -9,6 +12,8 @@ import com.example.authservice.domain.identity.repository.IdentitySessionReposit
 import com.example.authservice.domain.repo.PermissionRepo;
 import com.example.authservice.domain.repo.RolePermissionRepo;
 import com.example.authservice.domain.repo.RoleRepo;
+import com.example.authservice.identity.usecase.AuthenticateUseCase;
+import com.example.authservice.identity.usecase.LogoutUseCase;
 import com.example.authservice.identity.usecase.impl.AuthenticateUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LoginUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LogoutUseCaseImpl;
@@ -62,6 +67,12 @@ class AccountAuthFlowTest {
     @Autowired
     private BcryptPasswordHasher passwordHasher;
 
+    @Autowired
+    private AuthenticateUseCase authenticateUseCase;
+
+    @Autowired
+    private LogoutUseCase logoutUseCase;
+
     @MockBean
     private IdentityAccountRepository identityAccountRepository;
 
@@ -80,6 +91,7 @@ class AccountAuthFlowTest {
     @BeforeEach
     void setUp() {
         sessionRepository.clear();
+        IdentityContextHolder.clear();
     }
 
     @Test
@@ -138,6 +150,67 @@ class AccountAuthFlowTest {
                 .andExpect(jsonPath("$.message").value("Token已过期，请重新登录"));
     }
 
+    @Test
+    void staleAuthenticatedRequestShouldNotDeleteNewSessionOnLogout() throws Exception {
+        String username = "tester";
+        String password = "123456";
+        IdentityAccount account = new IdentityAccount(
+                1L,
+                username,
+                passwordHasher.encode(new com.example.authservice.domain.identity.model.RawPassword(password)),
+                "tester@example.com",
+                null
+        );
+        when(identityAccountRepository.findByUsername(username)).thenReturn(account);
+
+        String oldToken = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization");
+
+        CurrentIdentity staleIdentity = authenticateUseCase.authenticate(oldToken);
+
+        String newToken = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization");
+
+        String oldSessionId = jwtUtil.parseSessionId(oldToken);
+        String newSessionId = jwtUtil.parseSessionId(newToken);
+
+        assertThat(oldSessionId).isNotEqualTo(newSessionId);
+        assertThat(sessionRepository.findBySessionId(oldSessionId)).isNull();
+        assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
+
+        IdentityContext identityContext = new IdentityContext();
+        identityContext.setId(staleIdentity.getId());
+        identityContext.setUsername(staleIdentity.getUsername());
+        identityContext.setSessionId(staleIdentity.getSessionId());
+        identityContext.setToken(staleIdentity.getToken());
+        identityContext.setRoles(staleIdentity.getRoles());
+        identityContext.setPermissions(staleIdentity.getPermissions());
+        IdentityContextHolder.set(identityContext);
+
+        try {
+            assertThat(logoutUseCase.logout()).isTrue();
+        } finally {
+            IdentityContextHolder.clear();
+        }
+
+        assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
+        assertThat(sessionRepository.findSessionIdByAccountId(1L)).isEqualTo(newSessionId);
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
     @Import({
@@ -177,8 +250,13 @@ class AccountAuthFlowTest {
         }
 
         @Override
+        public String findSessionIdByAccountId(Long accountId) {
+            return userSessions.get(accountId);
+        }
+
+        @Override
         public IdentitySession findByAccountId(Long accountId) {
-            String sessionId = userSessions.get(accountId);
+            String sessionId = findSessionIdByAccountId(accountId);
             if (sessionId == null) {
                 return null;
             }

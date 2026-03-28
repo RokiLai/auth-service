@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,5 +52,25 @@ class RedisSessionStoreImplTest {
 
         verify(redisUtil).delete("login:session:sid-123");
         verify(redisUtil).delete("login:user_session:42");
+    }
+
+    @Test
+    void findByAccountIdShouldResolveSessionIdFromUserBinding() {
+        IdentitySession session = new IdentitySession();
+        session.setSessionId("sid-123");
+        when(redisUtil.get("login:user_session:42")).thenReturn("sid-123");
+        when(redisUtil.get("login:session:sid-123")).thenReturn(session);
+
+        assertThat(sessionStore.findSessionIdByAccountId(42L)).isEqualTo("sid-123");
+        assertThat(sessionStore.findByAccountId(42L)).isSameAs(session);
+    }
+
+    @Test
+    void findByAccountIdShouldReturnNullWhenNoUserBindingExists() {
+        when(redisUtil.get("login:user_session:42")).thenReturn(null);
+
+        assertThat(sessionStore.findSessionIdByAccountId(42L)).isNull();
+        assertThat(sessionStore.findByAccountId(42L)).isNull();
+        verify(redisUtil, never()).get("login:session:null");
     }
 }

@@ -59,6 +59,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             IdentityContext identityContext = new IdentityContext();
             identityContext.setId(currentIdentity.getId());
             identityContext.setUsername(currentIdentity.getUsername());
+            identityContext.setSessionId(currentIdentity.getSessionId());
             identityContext.setToken(currentIdentity.getToken());
             identityContext.setRoles(currentIdentity.getRoles());
             identityContext.setPermissions(currentIdentity.getPermissions());

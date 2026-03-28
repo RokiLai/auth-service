@@ -42,6 +42,7 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
             CurrentIdentity identity = new CurrentIdentity();
             identity.setId(session.getAccountId());
             identity.setUsername(session.getUsername());
+            identity.setSessionId(session.getSessionId());
             identity.setToken(session.getToken());
             identity.setRoles(session.getRoles());
             identity.setPermissions(session.getPermissions());

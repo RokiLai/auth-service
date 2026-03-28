@@ -33,8 +33,13 @@ public class RedisSessionStoreImpl implements IdentitySessionRepository {
     }
 
     @Override
+    public String findSessionIdByAccountId(Long accountId) {
+        return (String) redisUtil.get(USER_SESSION_KEY_PREFIX + accountId);
+    }
+
+    @Override
     public IdentitySession findByAccountId(Long accountId) {
-        String sessionId = (String) redisUtil.get(USER_SESSION_KEY_PREFIX + accountId);
+        String sessionId = findSessionIdByAccountId(accountId);
         if (sessionId == null || sessionId.isBlank()) {
             return null;
         }

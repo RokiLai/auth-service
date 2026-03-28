@@ -8,6 +8,8 @@ public interface IdentitySessionRepository {
 
     IdentitySession findBySessionId(String sessionId);
 
+    String findSessionIdByAccountId(Long accountId);
+
     IdentitySession findByAccountId(Long accountId);
 
     void deleteBySessionId(String sessionId);
