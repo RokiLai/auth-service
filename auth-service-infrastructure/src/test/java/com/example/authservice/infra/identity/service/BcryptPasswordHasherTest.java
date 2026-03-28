@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BcryptCompatiblePasswordHasherTest {
+class BcryptPasswordHasherTest {
 
-    private final BcryptCompatiblePasswordHasher passwordHasher = new BcryptCompatiblePasswordHasher();
+    private final BcryptPasswordHasher passwordHasher = new BcryptPasswordHasher();
 
     @Test
     void shouldEncodeNewPasswordAsBcrypt() {
@@ -20,10 +20,9 @@ class BcryptCompatiblePasswordHasherTest {
     }
 
     @Test
-    void shouldStillMatchLegacyPlaintextPassword() {
+    void shouldRejectLegacyPlaintextPasswordValues() {
         PasswordHash legacy = new PasswordHash("123456");
 
-        assertThat(passwordHasher.matches(new RawPassword("123456"), legacy)).isTrue();
-        assertThat(passwordHasher.matches(new RawPassword("654321"), legacy)).isFalse();
+        assertThat(passwordHasher.matches(new RawPassword("123456"), legacy)).isFalse();
     }
 }

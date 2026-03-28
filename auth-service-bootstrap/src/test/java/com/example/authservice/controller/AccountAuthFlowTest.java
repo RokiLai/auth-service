@@ -12,7 +12,7 @@ import com.example.authservice.domain.repo.RoleRepo;
 import com.example.authservice.identity.usecase.impl.AuthenticateUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LoginUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LogoutUseCaseImpl;
-import com.example.authservice.infra.identity.service.BcryptCompatiblePasswordHasher;
+import com.example.authservice.infra.identity.service.BcryptPasswordHasher;
 import com.example.authservice.infra.identity.service.JwtIdentityTokenProvider;
 import com.example.authservice.service.AccountService;
 import com.example.authservice.util.JwtUtil;
@@ -59,6 +59,9 @@ class AccountAuthFlowTest {
     @Autowired
     private InMemoryIdentitySessionRepository sessionRepository;
 
+    @Autowired
+    private BcryptPasswordHasher passwordHasher;
+
     @MockBean
     private IdentityAccountRepository identityAccountRepository;
 
@@ -86,7 +89,7 @@ class AccountAuthFlowTest {
         IdentityAccount account = new IdentityAccount(
                 1L,
                 username,
-                new com.example.authservice.domain.identity.model.PasswordHash(password),
+                passwordHasher.encode(new com.example.authservice.domain.identity.model.RawPassword(password)),
                 "tester@example.com",
                 null
         );
@@ -144,7 +147,7 @@ class AccountAuthFlowTest {
             JwtUtil.class,
             JwtProperties.class,
             JwtIdentityTokenProvider.class,
-            BcryptCompatiblePasswordHasher.class,
+            BcryptPasswordHasher.class,
             LoginUseCaseImpl.class,
             LogoutUseCaseImpl.class,
             AuthenticateUseCaseImpl.class

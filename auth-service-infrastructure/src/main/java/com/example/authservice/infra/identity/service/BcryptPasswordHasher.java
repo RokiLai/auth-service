@@ -6,10 +6,8 @@ import com.example.authservice.domain.identity.service.PasswordHasher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-
 @Component
-public class BcryptCompatiblePasswordHasher implements PasswordHasher {
+public class BcryptPasswordHasher implements PasswordHasher {
 
     private final BCryptPasswordEncoder delegate = new BCryptPasswordEncoder();
 
@@ -23,13 +21,6 @@ public class BcryptCompatiblePasswordHasher implements PasswordHasher {
         if (rawPassword == null || passwordHash == null || passwordHash.getValue() == null) {
             return false;
         }
-        if (looksLikeBcrypt(passwordHash.getValue())) {
-            return delegate.matches(rawPassword.getValue(), passwordHash.getValue());
-        }
-        return Objects.equals(rawPassword.getValue(), passwordHash.getValue());
-    }
-
-    private boolean looksLikeBcrypt(String value) {
-        return value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$");
+        return delegate.matches(rawPassword.getValue(), passwordHash.getValue());
     }
 }
