@@ -6,22 +6,29 @@ on:
   pull_request:
     branches: [ "master", "main" ]
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+        server-id: github
+        server-username: MAVEN_GITHUB_USERNAME
+        server-password: MAVEN_GITHUB_TOKEN
 
     - name: Cache Maven packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -30,3 +37,6 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B clean verify
+      env:
+        MAVEN_GITHUB_USERNAME: ${{ secrets.MAVEN_GITHUB_USERNAME }}
+        MAVEN_GITHUB_TOKEN: ${{ secrets.MAVEN_GITHUB_TOKEN }}
