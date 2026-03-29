@@ -156,6 +156,54 @@ class AccountAuthFlowTest {
     }
 
     @Test
+    void secondLoginShouldInvalidatePreviousToken() throws Exception {
+        String username = "tester";
+        String password = "123456";
+        IdentityAccount account = new IdentityAccount(
+                1L,
+                username,
+                passwordHasher.encode(new com.example.authservice.domain.identity.model.RawPassword(password)),
+                "tester@example.com",
+                null
+        );
+        when(identityAccountRepository.findByUsername(username)).thenReturn(account);
+
+        String firstToken = bearerToken(mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization"));
+
+        String secondToken = bearerToken(mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization"));
+
+        assertThat(firstToken).isNotEqualTo(secondToken);
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", BEARER_PREFIX + firstToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40103))
+                .andExpect(jsonPath("$.message").value("Token已过期，请重新登录"));
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", BEARER_PREFIX + secondToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").value(true));
+    }
+
+    @Test
     void invalidLoginRequestShouldBeRejectedBeforeBusinessLogic() throws Exception {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -170,6 +218,85 @@ class AccountAuthFlowTest {
                 )));
 
         verifyNoInteractions(identityAccountRepository);
+    }
+
+    @Test
+    void missingTokenShouldBeRejectedByInterceptor() throws Exception {
+        mockMvc.perform(post("/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40102))
+                .andExpect(jsonPath("$.message").value("缺少Token，请先登录"));
+    }
+
+    @Test
+    void emptyBearerTokenShouldBeRejectedAsInvalid() throws Exception {
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", BEARER_PREFIX))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40104))
+                .andExpect(jsonPath("$.message").value("Token无效"));
+    }
+
+    @Test
+    void bareTokenShouldBeRejectedWhenBearerPrefixIsMissing() throws Exception {
+        String username = "tester";
+        String password = "123456";
+        IdentityAccount account = new IdentityAccount(
+                1L,
+                username,
+                passwordHasher.encode(new com.example.authservice.domain.identity.model.RawPassword(password)),
+                "tester@example.com",
+                null
+        );
+        when(identityAccountRepository.findByUsername(username)).thenReturn(account);
+
+        String token = bearerToken(mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization"));
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40104))
+                .andExpect(jsonPath("$.message").value("Token无效"));
+    }
+
+    @Test
+    void tamperedBearerTokenShouldBeRejectedAsInvalid() throws Exception {
+        String username = "tester";
+        String password = "123456";
+        IdentityAccount account = new IdentityAccount(
+                1L,
+                username,
+                passwordHasher.encode(new com.example.authservice.domain.identity.model.RawPassword(password)),
+                "tester@example.com",
+                null
+        );
+        when(identityAccountRepository.findByUsername(username)).thenReturn(account);
+
+        String token = bearerToken(mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username":"tester","password":"123456"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getHeader("Authorization"));
+
+        String tamperedToken = token.substring(0, token.length() - 1) + (token.endsWith("a") ? "b" : "a");
+
+        mockMvc.perform(post("/auth/logout")
+                        .header("Authorization", BEARER_PREFIX + tamperedToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(40104))
+                .andExpect(jsonPath("$.message").value("Token无效"));
     }
 
 

@@ -91,13 +91,14 @@ public class JwtInterceptor implements HandlerInterceptor {
         if (!StringUtils.hasText(candidate)) {
             throw new BusinessException(AuthErrorCode.TOKEN_MISSING);
         }
-        if (candidate.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
-            String bearerToken = candidate.substring(BEARER_PREFIX.length()).trim();
-            if (!StringUtils.hasText(bearerToken)) {
-                throw new BusinessException(AuthErrorCode.TOKEN_INVALID);
-            }
-            return bearerToken;
+        if (!candidate.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+            throw new BusinessException(AuthErrorCode.TOKEN_INVALID);
         }
-        return candidate;
+
+        String bearerToken = candidate.substring(BEARER_PREFIX.length()).trim();
+        if (!StringUtils.hasText(bearerToken)) {
+            throw new BusinessException(AuthErrorCode.TOKEN_INVALID);
+        }
+        return bearerToken;
     }
 }
