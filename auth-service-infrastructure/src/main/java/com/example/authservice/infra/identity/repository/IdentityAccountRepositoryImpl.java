@@ -1,6 +1,7 @@
 package com.example.authservice.infra.identity.repository;
 
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.PasswordHash;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.infra.mapper.AccountMapper;
@@ -17,11 +18,14 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
 
     private final AccountMapper accountMapper;
     private final AccountRoleMapper accountRoleMapper;
+    private final IdentityAccountFactory identityAccountFactory;
 
     public IdentityAccountRepositoryImpl(AccountMapper accountMapper,
-                                         AccountRoleMapper accountRoleMapper) {
+                                         AccountRoleMapper accountRoleMapper,
+                                         IdentityAccountFactory identityAccountFactory) {
         this.accountMapper = accountMapper;
         this.accountRoleMapper = accountRoleMapper;
+        this.identityAccountFactory = identityAccountFactory;
     }
 
     @Override
@@ -31,7 +35,7 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
             return null;
         }
         List<AccountRolePO> accountRolePOS = accountRoleMapper.selectByAccountId(account.getId());
-        return new IdentityAccount(
+        return identityAccountFactory.restore(
                 account.getId(),
                 account.getUsername(),
                 new PasswordHash(account.getPassword()),
