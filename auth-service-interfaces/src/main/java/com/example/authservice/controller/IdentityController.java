@@ -49,9 +49,9 @@ public class IdentityController {
     @PostMapping("/register")
     public Result<Boolean> register(@Valid @RequestBody RegisterRequest request) {
         registerUseCase.register(new RegisterCommand(
-                request.getUsername(),
-                request.getPassword(),
-                request.getEmail()
+                request.username(),
+                request.password(),
+                request.email()
         ));
         return Result.success(true);
     }
@@ -60,7 +60,7 @@ public class IdentityController {
     @PostMapping("/login")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                        HttpServletResponse response) {
-        LoginResult loginResult = loginUseCase.login(request.getUsername(), request.getPassword());
+        LoginResult loginResult = loginUseCase.login(request.username(), request.password());
         LoginResponse loginResponse = new LoginResponse(
                 loginResult.id(),
                 loginResult.username(),
@@ -88,8 +88,8 @@ public class IdentityController {
                                           @AuthIdentity CurrentIdentity currentIdentity) {
         updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
                 CurrentOperator.from(currentIdentity),
-                request.getOldPassword(),
-                request.getNewPassword()
+                request.oldPassword(),
+                request.newPassword()
         ));
         return Result.success(true);
     }
