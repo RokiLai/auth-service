@@ -14,13 +14,15 @@ import com.example.authservice.domain.identity.service.impl.AuthenticationDomain
 import com.example.authservice.domain.identity.service.AuthorizationSnapshotProvider;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
 import com.example.authservice.identity.usecase.LogoutUseCase;
+import com.example.authservice.identity.usecase.RegisterUseCase;
+import com.example.authservice.identity.usecase.UpdatePasswordUseCase;
 import com.example.authservice.identity.usecase.command.LogoutCommand;
 import com.example.authservice.identity.usecase.impl.AuthenticateUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LoginUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LogoutUseCaseImpl;
+import com.example.authservice.identity.usecase.impl.UpdatePasswordUseCaseImpl;
 import com.example.authservice.infra.identity.service.BcryptPasswordHasher;
 import com.example.authservice.infra.identity.service.JwtIdentityTokenProvider;
-import com.example.authservice.service.AccountService;
 import com.example.authservice.util.JwtUtil;
 import com.example.authservice.util.config.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = AccountAuthFlowTest.TestApplication.class,
+        classes = IdentityAuthFlowTest.TestApplication.class,
         properties = {
                 "jwt.secret=your-256-bit-secret-your-256-bit-secret",
                 "jwt.expire=3600000",
@@ -58,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         }
 )
 @AutoConfigureMockMvc
-class AccountAuthFlowTest {
+class IdentityAuthFlowTest {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -87,7 +89,10 @@ class AccountAuthFlowTest {
     private AuthorizationSnapshotProvider authorizationSnapshotProvider;
 
     @MockBean
-    private AccountService accountService;
+    private RegisterUseCase registerUseCase;
+
+    @MockBean
+    private UpdatePasswordUseCase updatePasswordUseCase;
 
     @BeforeEach
     void setUp() {
@@ -363,7 +368,8 @@ class AccountAuthFlowTest {
             AuthenticationDomainServiceImpl.class,
             LoginUseCaseImpl.class,
             LogoutUseCaseImpl.class,
-            AuthenticateUseCaseImpl.class
+            AuthenticateUseCaseImpl.class,
+            UpdatePasswordUseCaseImpl.class
     })
     static class TestApplication {
 

@@ -1,4 +1,4 @@
-package com.example.authservice.service.command;
+package com.example.authservice.identity.usecase.command;
 
 import com.example.authservice.application.context.CurrentOperator;
 

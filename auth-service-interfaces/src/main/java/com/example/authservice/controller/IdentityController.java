@@ -4,12 +4,18 @@ import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.annotation.AuthIdentity;
 import com.example.authservice.annotation.PassToken;
 import com.example.authservice.controller.request.LoginRequest;
+import com.example.authservice.controller.request.RegisterRequest;
+import com.example.authservice.controller.request.UpdatePasswordRequest;
+import com.example.authservice.controller.response.LoginResponse;
 import com.example.authservice.domain.identity.model.result.CurrentIdentity;
 import com.example.authservice.identity.dto.LoginResult;
 import com.example.authservice.identity.usecase.LoginUseCase;
 import com.example.authservice.identity.usecase.LogoutUseCase;
+import com.example.authservice.identity.usecase.RegisterUseCase;
+import com.example.authservice.identity.usecase.UpdatePasswordUseCase;
 import com.example.authservice.identity.usecase.command.LogoutCommand;
-import com.example.authservice.service.dto.UserLoginDTO;
+import com.example.authservice.identity.usecase.command.RegisterCommand;
+import com.example.authservice.identity.usecase.command.UpdatePasswordCommand;
 import com.roki.exception.result.Result;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,20 +37,37 @@ public class IdentityController {
     @Autowired
     private LogoutUseCase logoutUseCase;
 
+    @Autowired
+    private RegisterUseCase registerUseCase;
+
+    @Autowired
+    private UpdatePasswordUseCase updatePasswordUseCase;
+
+    @PassToken
+    @PostMapping("/register")
+    public Result<Boolean> register(@Valid @RequestBody RegisterRequest request) {
+        registerUseCase.register(new RegisterCommand(
+                request.getUsername(),
+                request.getPassword(),
+                request.getEmail()
+        ));
+        return Result.success(true);
+    }
+
     @PassToken
     @PostMapping("/login")
-    public Result<UserLoginDTO> login(@Valid @RequestBody LoginRequest request,
-                                      HttpServletResponse response) {
+    public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                       HttpServletResponse response) {
         LoginResult loginResult = loginUseCase.login(request.getUsername(), request.getPassword());
-        UserLoginDTO userLoginDTO = new UserLoginDTO(
+        LoginResponse loginResponse = new LoginResponse(
                 loginResult.getId(),
                 loginResult.getUsername(),
                 loginResult.getEmail(),
                 loginResult.getToken()
         );
-        response.setHeader("Authorization", BEARER_PREFIX + userLoginDTO.getToken());
+        response.setHeader("Authorization", BEARER_PREFIX + loginResponse.token());
         response.setHeader("Access-Control-Expose-Headers", "Authorization");
-        return Result.success(userLoginDTO);
+        return Result.success(loginResponse);
     }
 
     @PostMapping("/logout")
@@ -54,5 +77,18 @@ public class IdentityController {
         // 控制器只负责把接口层身份对象转换成应用层命令对象。
         // The controller only translates the interface-layer identity into an application command object.
         return Result.success(logoutUseCase.logout(new LogoutCommand(CurrentOperator.from(currentIdentity))));
+    }
+
+    @PostMapping("/update-password")
+    // 改密属于身份能力，由 identity 控制器承接认证上下文并转给应用用例。
+    // Password updates belong to the identity capability, so the identity controller maps authenticated context into the use case command.
+    public Result<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
+                                          @AuthIdentity CurrentIdentity currentIdentity) {
+        updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
+                CurrentOperator.from(currentIdentity),
+                request.getOldPassword(),
+                request.getNewPassword()
+        ));
+        return Result.success(true);
     }
 }
