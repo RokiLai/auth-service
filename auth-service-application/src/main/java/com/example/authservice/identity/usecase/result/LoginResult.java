@@ -1,4 +1,4 @@
-package com.example.authservice.identity.dto;
+package com.example.authservice.identity.usecase.result;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

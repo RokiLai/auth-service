@@ -7,8 +7,8 @@ import com.example.authservice.domain.identity.model.result.AuthorizationSnapsho
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.AuthenticationDomainService;
 import com.example.authservice.domain.identity.service.AuthorizationSnapshotProvider;
-import com.example.authservice.identity.dto.LoginResult;
 import com.example.authservice.identity.usecase.LoginUseCase;
+import com.example.authservice.identity.usecase.result.LoginResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
