@@ -3,28 +3,22 @@ package com.example.authservice.identity.usecase.impl;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.context.AuthenticatedIdentity;
-import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.AuthenticationDomainService;
-import com.example.authservice.domain.identity.service.AuthorizationSnapshotProvider;
 import com.example.authservice.identity.usecase.LoginUseCase;
 import com.example.authservice.identity.usecase.result.LoginResult;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 @Service
 public class LoginUseCaseImpl implements LoginUseCase {
 
     private final AuthenticationDomainService authenticationDomainService;
     private final IdentitySessionRepository identitySessionRepository;
-    private final AuthorizationSnapshotProvider authorizationSnapshotProvider;
 
     public LoginUseCaseImpl(AuthenticationDomainService authenticationDomainService,
-                            IdentitySessionRepository identitySessionRepository,
-                            AuthorizationSnapshotProvider authorizationSnapshotProvider) {
+                            IdentitySessionRepository identitySessionRepository) {
         this.authenticationDomainService = authenticationDomainService;
         this.identitySessionRepository = identitySessionRepository;
-        this.authorizationSnapshotProvider = authorizationSnapshotProvider;
     }
 
     @Override
@@ -33,12 +27,6 @@ public class LoginUseCaseImpl implements LoginUseCase {
         AuthenticatedIdentity authenticatedIdentity = authenticationDomainService.authenticate(username, password);
         IdentityAccount account = authenticatedIdentity.account();
         IdentitySession session = authenticatedIdentity.session();
-
-        // 角色和权限在登录时做一次快照，避免每次鉴权都回源查询。
-        if (!CollectionUtils.isEmpty(account.getRoleIds())) {
-            AuthorizationSnapshot snapshot = authorizationSnapshotProvider.loadByRoleIds(account.getRoleIds());
-            session.grantAuthorities(snapshot.roles(), snapshot.permissions());
-        }
 
         // 应用层负责持久化会话，并把领域结果转换成接口返回对象。
         identitySessionRepository.save(session);
