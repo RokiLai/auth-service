@@ -51,7 +51,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         classes = AccountAuthFlowTest.TestApplication.class,
         properties = {
                 "jwt.secret=your-256-bit-secret-your-256-bit-secret",
-                "jwt.expire=3600000"
+                "jwt.expire=3600000",
+                "roki.exception.error-code.project-code=10",
+                "roki.exception.error-code.default-biz-code=01",
+                "roki.exception.error-code.biz-codes.auth=01"
         }
 )
 @AutoConfigureMockMvc
@@ -152,7 +155,7 @@ class AccountAuthFlowTest {
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", BEARER_PREFIX + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44103))
+                .andExpect(jsonPath("$.code").value(1001103))
                 .andExpect(jsonPath("$.message").value("Token已过期，请重新登录"));
     }
 
@@ -194,7 +197,7 @@ class AccountAuthFlowTest {
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", BEARER_PREFIX + firstToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44103))
+                .andExpect(jsonPath("$.code").value(1001103))
                 .andExpect(jsonPath("$.message").value("Token已过期，请重新登录"));
 
         mockMvc.perform(post("/auth/logout")
@@ -212,7 +215,7 @@ class AccountAuthFlowTest {
                                 {"username":"","password":""}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(40001))
+                .andExpect(jsonPath("$.code").value(9001101))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.anyOf(
                         org.hamcrest.Matchers.is("用户名不能为空"),
                         org.hamcrest.Matchers.is("密码不能为空")
@@ -225,7 +228,7 @@ class AccountAuthFlowTest {
     void missingTokenShouldBeRejectedByInterceptor() throws Exception {
         mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44102))
+                .andExpect(jsonPath("$.code").value(1001102))
                 .andExpect(jsonPath("$.message").value("缺少Token，请先登录"));
     }
 
@@ -234,7 +237,7 @@ class AccountAuthFlowTest {
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", BEARER_PREFIX))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44104))
+                .andExpect(jsonPath("$.code").value(1001104))
                 .andExpect(jsonPath("$.message").value("Token无效"));
     }
 
@@ -264,7 +267,7 @@ class AccountAuthFlowTest {
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44104))
+                .andExpect(jsonPath("$.code").value(1001104))
                 .andExpect(jsonPath("$.message").value("Token无效"));
     }
 
@@ -296,7 +299,7 @@ class AccountAuthFlowTest {
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", BEARER_PREFIX + tamperedToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(44104))
+                .andExpect(jsonPath("$.code").value(1001104))
                 .andExpect(jsonPath("$.message").value("Token无效"));
     }
 

@@ -1,7 +1,7 @@
 package com.example.authservice.exception.auth;
 
 import com.example.authservice.exception.AuthErrorCode;
-import com.roki.exception.BusinessException;
+import com.roki.exception.exception.BusinessException;
 
 /**
  * 认证域异常基类：保留统一错误码响应，同时让代码层面具备业务语义。

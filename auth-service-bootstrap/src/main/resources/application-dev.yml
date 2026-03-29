@@ -34,3 +34,11 @@ logging:
     org.mybatis: debug          # MyBatis 本身
     org.mybatis.spring.SqlSessionFactoryBean: debug
     org.apache.ibatis: debug    # ⬅️ 打印 SQL 和参数
+
+roki:
+  exception:
+    error-code:
+      project-code: 10
+      default-biz-code: 01
+      biz-codes:
+        auth: 01
