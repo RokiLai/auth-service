@@ -8,12 +8,12 @@ import com.example.authservice.exception.auth.PasswordTooShortException;
 import com.example.authservice.exception.auth.UsernameRequiredException;
 import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class IdentityAccount {
@@ -35,7 +35,7 @@ public class IdentityAccount {
      * The identity aggregate keeps password-update rules so the application layer does not mutate password hashes directly.
      */
     public void updatePassword(RawPassword newPassword, PasswordHasher passwordHasher) {
-        if (newPassword == null || StringUtils.isBlank(newPassword.getValue()) || newPassword.getValue().length() < 6) {
+        if (newPassword == null || StringUtils.isBlank(newPassword.value()) || newPassword.value().length() < 6) {
             throw new PasswordTooShortException();
         }
         this.passwordHash = passwordHasher.encode(newPassword);
@@ -52,7 +52,7 @@ public class IdentityAccount {
         if (StringUtils.isBlank(username)) {
             throw new UsernameRequiredException();
         }
-        if (rawPassword == null || StringUtils.isBlank(rawPassword.getValue()) || rawPassword.getValue().length() < 6) {
+        if (rawPassword == null || StringUtils.isBlank(rawPassword.value()) || rawPassword.value().length() < 6) {
             throw new PasswordTooShortException();
         }
         if (StringUtils.isBlank(email) || !email.contains("@")) {

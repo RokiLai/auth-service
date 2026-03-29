@@ -32,11 +32,7 @@ class RegisterUseCaseImplTest {
     @Test
     void registerShouldCreateIdentityAccountAndPersistIt() {
         when(identityAccountRepository.findByUsername("new-user")).thenReturn(null);
-        doAnswer(invocation -> {
-            IdentityAccount account = invocation.getArgument(0);
-            account.setId(1L);
-            return null;
-        }).when(identityAccountRepository).save(any(IdentityAccount.class));
+        doAnswer(invocation -> null).when(identityAccountRepository).save(any(IdentityAccount.class));
 
         boolean registered = registerUseCase.register(new RegisterCommand(
                 "new-user",

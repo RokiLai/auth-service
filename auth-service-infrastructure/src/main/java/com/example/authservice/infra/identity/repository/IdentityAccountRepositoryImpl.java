@@ -45,7 +45,7 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
         AccountPO po = new AccountPO();
         po.setId(account.getId());
         po.setUsername(account.getUsername());
-        po.setPassword(account.getPasswordHash().getValue());
+        po.setPassword(account.getPasswordHash().value());
         po.setEmail(account.getEmail());
         if (po.getId() == null) {
             accountMapper.insert(po);

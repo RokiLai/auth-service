@@ -1,12 +1,16 @@
 package com.example.authservice.domain.identity.model.entity;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-@Data
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class IdentitySession implements Serializable {
     private String sessionId;
     private Long accountId;
@@ -20,10 +24,10 @@ public class IdentitySession implements Serializable {
      */
     public static IdentitySession createFor(IdentityAccount account, String sessionId, String token) {
         IdentitySession session = new IdentitySession();
-        session.setSessionId(sessionId);
-        session.setAccountId(account.getId());
-        session.setUsername(account.getUsername());
-        session.setToken(token);
+        session.sessionId = sessionId;
+        session.accountId = account.getId();
+        session.username = account.getUsername();
+        session.token = token;
         return session;
     }
 

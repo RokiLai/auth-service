@@ -27,7 +27,7 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
     public CurrentIdentity authenticate(String rawToken) {
         try {
             TokenClaims claims = identityTokenProvider.parse(rawToken);
-            String sessionId = claims.getSessionId();
+            String sessionId = claims.sessionId();
             if (sessionId == null || sessionId.isBlank()) {
                 throw new TokenInvalidException();
             }

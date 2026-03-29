@@ -37,7 +37,7 @@ public class LoginUseCaseImpl implements LoginUseCase {
         // 角色和权限在登录时做一次快照，避免每次鉴权都回源查询。
         if (!CollectionUtils.isEmpty(account.getRoleIds())) {
             AuthorizationSnapshot snapshot = authorizationSnapshotProvider.loadByRoleIds(account.getRoleIds());
-            session.grantAuthorities(snapshot.getRoles(), snapshot.getPermissions());
+            session.grantAuthorities(snapshot.roles(), snapshot.permissions());
         }
 
         // 应用层负责持久化会话，并把领域结果转换成接口返回对象。
