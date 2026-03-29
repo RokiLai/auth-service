@@ -1,5 +1,7 @@
 package com.example.authservice.service;
 
+import com.example.authservice.service.command.UpdatePasswordCommand;
+
 import java.util.List;
 
 public interface AccountService {
@@ -12,10 +14,9 @@ public interface AccountService {
     boolean validatePassword(String username, String oldPassword);
     /**
      * 更新用户密码
-     * @param username 用户名
-     * @param newPassword 新密码
+     * @param command 修改密码命令
      */
-    boolean updatePassword(String username, String newPassword);
+    boolean updatePassword(UpdatePasswordCommand command);
 
     /**
      * 注册用户

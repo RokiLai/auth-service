@@ -2,18 +2,19 @@ package com.example.authservice.controller;
 
 import com.example.authservice.config.JwtInterceptor;
 import com.example.authservice.config.WebConfig;
-import com.example.authservice.auth.IdentityContext;
-import com.example.authservice.auth.IdentityContextHolder;
+import com.example.authservice.config.CurrentIdentityArgumentResolver;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.result.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.model.result.CurrentIdentity;
+import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.impl.AuthenticationDomainServiceImpl;
 import com.example.authservice.domain.identity.service.AuthorizationSnapshotProvider;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
 import com.example.authservice.identity.usecase.LogoutUseCase;
+import com.example.authservice.identity.usecase.command.LogoutCommand;
 import com.example.authservice.identity.usecase.impl.AuthenticateUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LoginUseCaseImpl;
 import com.example.authservice.identity.usecase.impl.LogoutUseCaseImpl;
@@ -91,7 +92,6 @@ class AccountAuthFlowTest {
     @BeforeEach
     void setUp() {
         sessionRepository.clear();
-        IdentityContextHolder.clear();
     }
 
     @Test
@@ -343,20 +343,7 @@ class AccountAuthFlowTest {
         assertThat(sessionRepository.findBySessionId(oldSessionId)).isNull();
         assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
 
-        IdentityContext identityContext = new IdentityContext();
-        identityContext.setId(staleIdentity.getId());
-        identityContext.setUsername(staleIdentity.getUsername());
-        identityContext.setSessionId(staleIdentity.getSessionId());
-        identityContext.setToken(staleIdentity.getToken());
-        identityContext.setRoles(staleIdentity.getRoles());
-        identityContext.setPermissions(staleIdentity.getPermissions());
-        IdentityContextHolder.set(identityContext);
-
-        try {
-            assertThat(logoutUseCase.logout()).isTrue();
-        } finally {
-            IdentityContextHolder.clear();
-        }
+        assertThat(logoutUseCase.logout(new LogoutCommand(CurrentOperator.from(staleIdentity)))).isTrue();
 
         assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
         assertThat(sessionRepository.findSessionIdByAccountId(1L)).isEqualTo(newSessionId);
@@ -367,6 +354,7 @@ class AccountAuthFlowTest {
     @Import({
             IdentityController.class,
             JwtInterceptor.class,
+            CurrentIdentityArgumentResolver.class,
             WebConfig.class,
             JwtUtil.class,
             JwtProperties.class,

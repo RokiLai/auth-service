@@ -1,8 +1,6 @@
 package com.example.authservice.config;
 
 import com.example.authservice.annotation.PassToken;
-import com.example.authservice.auth.IdentityContext;
-import com.example.authservice.auth.IdentityContextHolder;
 import com.example.authservice.domain.identity.model.result.CurrentIdentity;
 import com.example.authservice.exception.auth.TokenInvalidException;
 import com.example.authservice.exception.auth.TokenMissingException;
@@ -24,6 +22,9 @@ import java.lang.reflect.Method;
 public class JwtInterceptor implements HandlerInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    // 认证通过后把当前身份放进 request，供参数解析器和控制器读取。
+    // Stores the authenticated identity on the request for argument resolution and controller access.
+    public static final String CURRENT_IDENTITY_ATTR = "currentIdentity";
     private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class); // 添加日志记录器
 
     @Autowired
@@ -60,17 +61,11 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             String token = resolveToken(authorizationHeader);
             CurrentIdentity currentIdentity = authenticateUseCase.authenticate(token);
-            IdentityContext identityContext = new IdentityContext();
-            identityContext.setId(currentIdentity.getId());
-            identityContext.setUsername(currentIdentity.getUsername());
-            identityContext.setSessionId(currentIdentity.getSessionId());
-            identityContext.setToken(currentIdentity.getToken());
-            identityContext.setRoles(currentIdentity.getRoles());
-            identityContext.setPermissions(currentIdentity.getPermissions());
-
             logger.info("Token 验证通过，用户: {}", currentIdentity.getUsername());
+            // 接口层通过 request attribute 传递当前身份，避免应用层依赖 ThreadLocal。
+            // Passes identity through request attributes so upper layers no longer depend on ThreadLocal.
             request.setAttribute("username", currentIdentity.getUsername());
-            IdentityContextHolder.set(identityContext);
+            request.setAttribute(CURRENT_IDENTITY_ATTR, currentIdentity);
         } catch (BusinessException e) {
             logger.warn("Token 校验未通过: {}", e.getMessage());
             throw e;
@@ -84,10 +79,11 @@ public class JwtInterceptor implements HandlerInterceptor {
                                 HttpServletResponse response,
                                 Object handler,
                                 Exception ex) {
-        IdentityContextHolder.clear();
     }
 
     private String resolveToken(String authorizationHeader) {
+        // 这里只负责解析 Bearer token 载荷，不承担业务鉴权职责。
+        // This only parses the Bearer token value and does not perform business authentication.
         String candidate = authorizationHeader.trim();
         if (!StringUtils.hasText(candidate)) {
             throw new TokenMissingException();

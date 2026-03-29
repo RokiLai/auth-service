@@ -1,11 +1,12 @@
 package com.example.authservice.identity.usecase.impl;
 
-import com.example.authservice.auth.IdentityContext;
-import com.example.authservice.auth.IdentityContextHolder;
+import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.exception.auth.TokenInvalidException;
 import com.example.authservice.identity.usecase.LogoutUseCase;
+import com.example.authservice.identity.usecase.command.LogoutCommand;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Objects;
 
@@ -19,17 +20,17 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
     }
 
     @Override
-    public boolean logout() {
-        IdentityContext currentAccount = IdentityContextHolder.get();
-        if (currentAccount == null || currentAccount.getId() == null || currentAccount.getSessionId() == null || currentAccount.getSessionId().isBlank()) {
+    public boolean logout(LogoutCommand command) {
+        CurrentOperator operator = command == null ? null : command.operator();
+        if (operator == null || operator.id() == null || !StringUtils.hasText(operator.sessionId())) {
             throw new TokenInvalidException();
         }
 
-        identitySessionRepository.deleteBySessionId(currentAccount.getSessionId());
+        identitySessionRepository.deleteBySessionId(operator.sessionId());
 
-        String boundSessionId = identitySessionRepository.findSessionIdByAccountId(currentAccount.getId());
-        if (Objects.equals(boundSessionId, currentAccount.getSessionId())) {
-            identitySessionRepository.deleteByAccountId(currentAccount.getId());
+        String boundSessionId = identitySessionRepository.findSessionIdByAccountId(operator.id());
+        if (Objects.equals(boundSessionId, operator.sessionId())) {
+            identitySessionRepository.deleteByAccountId(operator.id());
         }
         return true;
     }

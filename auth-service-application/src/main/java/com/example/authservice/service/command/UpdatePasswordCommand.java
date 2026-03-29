@@ -1,0 +1,14 @@
+package com.example.authservice.service.command;
+
+import com.example.authservice.application.context.CurrentOperator;
+
+/**
+ * 修改密码用例的输入命令。
+ * Command object for the update-password use case.
+ */
+public record UpdatePasswordCommand(
+        CurrentOperator operator,
+        String oldPassword,
+        String newPassword
+) {
+}
