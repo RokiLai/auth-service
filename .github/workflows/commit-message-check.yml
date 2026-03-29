@@ -2,9 +2,6 @@ name: Commit Message Check
 
 on:
   push:
-    branches:
-      - master
-      - main
   pull_request:
     branches:
       - master
