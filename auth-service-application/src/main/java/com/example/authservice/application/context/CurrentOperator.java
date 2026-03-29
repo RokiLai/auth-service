@@ -22,11 +22,11 @@ public record CurrentOperator(
      */
     public static CurrentOperator from(CurrentIdentity currentIdentity) {
         return new CurrentOperator(
-                currentIdentity.getId(),
-                currentIdentity.getUsername(),
-                currentIdentity.getSessionId(),
-                currentIdentity.getRoles(),
-                currentIdentity.getPermissions()
+                currentIdentity.id(),
+                currentIdentity.username(),
+                currentIdentity.sessionId(),
+                currentIdentity.roles(),
+                currentIdentity.permissions()
         );
     }
 }

@@ -38,14 +38,14 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
                 throw new TokenExpiredException();
             }
 
-            CurrentIdentity identity = new CurrentIdentity();
-            identity.setId(session.getAccountId());
-            identity.setUsername(session.getUsername());
-            identity.setSessionId(session.getSessionId());
-            identity.setToken(session.getToken());
-            identity.setRoles(session.getRoles());
-            identity.setPermissions(session.getPermissions());
-            return identity;
+            return new CurrentIdentity(
+                    session.getAccountId(),
+                    session.getUsername(),
+                    session.getSessionId(),
+                    session.getToken(),
+                    session.getRoles(),
+                    session.getPermissions()
+            );
         } catch (JwtException e) {
             throw new TokenInvalidException();
         }

@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -28,8 +27,11 @@ public class JwtInterceptor implements HandlerInterceptor {
     public static final String CURRENT_IDENTITY_ATTR = "currentIdentity";
     private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class); // 添加日志记录器
 
-    @Autowired
-    private AuthenticateUseCase authenticateUseCase;
+    private final AuthenticateUseCase authenticateUseCase;
+
+    public JwtInterceptor(AuthenticateUseCase authenticateUseCase) {
+        this.authenticateUseCase = authenticateUseCase;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -62,10 +64,10 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             String token = resolveToken(authorizationHeader);
             CurrentIdentity currentIdentity = authenticateUseCase.authenticate(token);
-            logger.info("Token 验证通过，用户: {}", currentIdentity.getUsername());
+            logger.info("Token 验证通过，用户: {}", currentIdentity.username());
             // 接口层通过 request attribute 传递当前身份，避免应用层依赖 ThreadLocal。
             // Passes identity through request attributes so upper layers no longer depend on ThreadLocal.
-            request.setAttribute("username", currentIdentity.getUsername());
+            request.setAttribute("username", currentIdentity.username());
             request.setAttribute(CURRENT_IDENTITY_ATTR, currentIdentity);
         } catch (BusinessException e) {
             logger.warn("Token 校验未通过: {}", e.getMessage());

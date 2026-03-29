@@ -19,7 +19,6 @@ import com.example.authservice.identity.usecase.result.LoginResult;
 import com.roki.exception.result.Result;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,17 +30,20 @@ public class IdentityController {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    @Autowired
-    private LoginUseCase loginUseCase;
+    private final LoginUseCase loginUseCase;
+    private final LogoutUseCase logoutUseCase;
+    private final RegisterUseCase registerUseCase;
+    private final UpdatePasswordUseCase updatePasswordUseCase;
 
-    @Autowired
-    private LogoutUseCase logoutUseCase;
-
-    @Autowired
-    private RegisterUseCase registerUseCase;
-
-    @Autowired
-    private UpdatePasswordUseCase updatePasswordUseCase;
+    public IdentityController(LoginUseCase loginUseCase,
+                              LogoutUseCase logoutUseCase,
+                              RegisterUseCase registerUseCase,
+                              UpdatePasswordUseCase updatePasswordUseCase) {
+        this.loginUseCase = loginUseCase;
+        this.logoutUseCase = logoutUseCase;
+        this.registerUseCase = registerUseCase;
+        this.updatePasswordUseCase = updatePasswordUseCase;
+    }
 
     @PassToken
     @PostMapping("/register")
@@ -60,10 +62,10 @@ public class IdentityController {
                                        HttpServletResponse response) {
         LoginResult loginResult = loginUseCase.login(request.getUsername(), request.getPassword());
         LoginResponse loginResponse = new LoginResponse(
-                loginResult.getId(),
-                loginResult.getUsername(),
-                loginResult.getEmail(),
-                loginResult.getToken()
+                loginResult.id(),
+                loginResult.username(),
+                loginResult.email(),
+                loginResult.token()
         );
         response.setHeader("Authorization", BEARER_PREFIX + loginResponse.token());
         response.setHeader("Access-Control-Expose-Headers", "Authorization");

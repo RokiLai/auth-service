@@ -31,8 +31,8 @@ public class LoginUseCaseImpl implements LoginUseCase {
     public LoginResult login(String username, String password) {
         // 认证、替换旧会话、创建新会话这些规则已下沉到领域服务。
         AuthenticatedIdentity authenticatedIdentity = authenticationDomainService.authenticate(username, password);
-        IdentityAccount account = authenticatedIdentity.getAccount();
-        IdentitySession session = authenticatedIdentity.getSession();
+        IdentityAccount account = authenticatedIdentity.account();
+        IdentitySession session = authenticatedIdentity.session();
 
         // 角色和权限在登录时做一次快照，避免每次鉴权都回源查询。
         if (!CollectionUtils.isEmpty(account.getRoleIds())) {

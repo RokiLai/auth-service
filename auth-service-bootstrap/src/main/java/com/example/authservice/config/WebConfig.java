@@ -1,20 +1,23 @@
 package com.example.authservice.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.util.List;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    @Autowired
-    private JwtInterceptor jwtInterceptor;
-    @Autowired
-    private CurrentIdentityArgumentResolver currentIdentityArgumentResolver;
+    private final JwtInterceptor jwtInterceptor;
+    private final CurrentIdentityArgumentResolver currentIdentityArgumentResolver;
+
+    public WebConfig(JwtInterceptor jwtInterceptor,
+                     CurrentIdentityArgumentResolver currentIdentityArgumentResolver) {
+        this.jwtInterceptor = jwtInterceptor;
+        this.currentIdentityArgumentResolver = currentIdentityArgumentResolver;
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
