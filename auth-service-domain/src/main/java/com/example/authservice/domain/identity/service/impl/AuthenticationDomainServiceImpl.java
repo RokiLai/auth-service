@@ -1,6 +1,7 @@
 package com.example.authservice.domain.identity.service.impl;
 
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.context.AuthenticatedIdentity;
 import com.example.authservice.domain.identity.model.valueobject.RawPassword;
@@ -21,15 +22,18 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
     private final IdentitySessionRepository identitySessionRepository;
     private final IdentityTokenProvider identityTokenProvider;
     private final PasswordHasher passwordHasher;
+    private final IdentitySessionFactory identitySessionFactory;
 
     public AuthenticationDomainServiceImpl(IdentityAccountRepository identityAccountRepository,
                                            IdentitySessionRepository identitySessionRepository,
                                            IdentityTokenProvider identityTokenProvider,
-                                           PasswordHasher passwordHasher) {
+                                           PasswordHasher passwordHasher,
+                                           IdentitySessionFactory identitySessionFactory) {
         this.identityAccountRepository = identityAccountRepository;
         this.identitySessionRepository = identitySessionRepository;
         this.identityTokenProvider = identityTokenProvider;
         this.passwordHasher = passwordHasher;
+        this.identitySessionFactory = identitySessionFactory;
     }
 
     @Override
@@ -50,7 +54,7 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
         // 认证成功后生成新的会话标识和 token，并组装会话实体。
         String sessionId = UUID.randomUUID().toString();
         String token = identityTokenProvider.issue(account.getId(), username, sessionId);
-        IdentitySession session = IdentitySession.createFor(account, sessionId, token);
+        IdentitySession session = identitySessionFactory.createFor(account, sessionId, token);
         return new AuthenticatedIdentity(account, session);
     }
 }

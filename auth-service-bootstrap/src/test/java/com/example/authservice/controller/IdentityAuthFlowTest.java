@@ -5,7 +5,9 @@ import com.example.authservice.config.WebConfig;
 import com.example.authservice.config.CurrentIdentityArgumentResolver;
 import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
+import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
 import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
@@ -77,6 +79,9 @@ class IdentityAuthFlowTest {
     private BcryptPasswordHasher passwordHasher;
 
     @Autowired
+    private IdentityAccountFactory identityAccountFactory;
+
+    @Autowired
     private AuthenticateUseCase authenticateUseCase;
 
     @Autowired
@@ -103,7 +108,7 @@ class IdentityAuthFlowTest {
     void loginLogoutFlowShouldCreateAndInvalidateSessionBackedToken() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -161,7 +166,7 @@ class IdentityAuthFlowTest {
     void secondLoginShouldInvalidatePreviousToken() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -243,7 +248,7 @@ class IdentityAuthFlowTest {
     void bareTokenShouldBeRejectedWhenBearerPrefixIsMissing() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -273,7 +278,7 @@ class IdentityAuthFlowTest {
     void tamperedBearerTokenShouldBeRejectedAsInvalid() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -306,7 +311,7 @@ class IdentityAuthFlowTest {
     void staleAuthenticatedRequestShouldNotDeleteNewSessionOnLogout() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -365,6 +370,8 @@ class IdentityAuthFlowTest {
             JwtProperties.class,
             JwtIdentityTokenProvider.class,
             BcryptPasswordHasher.class,
+            IdentityAccountFactory.class,
+            IdentitySessionFactory.class,
             AuthenticationDomainServiceImpl.class,
             LoginUseCaseImpl.class,
             LogoutUseCaseImpl.class,
