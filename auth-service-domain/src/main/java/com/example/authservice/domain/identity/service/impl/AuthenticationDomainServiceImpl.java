@@ -65,6 +65,8 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
         // 授权快照属于登录成功后附着到会话上的领域规则，不应由应用层回填。
         // Attaching the authorization snapshot to the session is part of the login domain rule, not application-layer orchestration.
         if (!CollectionUtils.isEmpty(account.getRoleIds())) {
+            // identity 领域只声明“我需要授权快照”，具体组装留给 authorization 领域处理。
+            // The identity domain only declares that it needs an authorization snapshot; the authorization domain assembles it.
             AuthorizationSnapshot snapshot = authorizationDomainService.buildSnapshot(account.getRoleIds());
             session.grantAuthorities(snapshot.roles(), snapshot.permissions());
         }

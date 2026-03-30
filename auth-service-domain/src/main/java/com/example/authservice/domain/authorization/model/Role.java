@@ -12,6 +12,8 @@ import java.util.Set;
 public class Role {
     private final Long id;
     private final String code;
+    // 角色聚合内部维护权限关联，仓储负责把该状态持久化到关系表。
+    // The role aggregate owns the permission association state, and the repository persists it into relation tables.
     private final List<Long> permissionIds;
 
     private Role(Long id, String code, List<Long> permissionIds) {
@@ -26,6 +28,7 @@ public class Role {
 
     /**
      * 角色授权属于角色聚合内部状态变更，调用方只表达“最新权限集合”。
+     * Role authorization is an internal aggregate state change; callers only provide the latest permission set.
      */
     public void authorize(Set<Long> newPermissions) {
         Objects.requireNonNull(newPermissions, "权限集合不能为空");
@@ -33,6 +36,10 @@ public class Role {
         this.permissionIds.addAll(new LinkedHashSet<>(newPermissions));
     }
 
+    /**
+     * 对外暴露只读权限视图，避免调用方绕过聚合直接改内部集合。
+     * Exposes a read-only permission view so callers cannot mutate aggregate state directly.
+     */
     public List<Long> permissionIds() {
         return List.copyOf(permissionIds);
     }
