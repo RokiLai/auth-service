@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
                 "roki.exception.error-code.biz-codes.auth=01"
         }
 )
+@ActiveProfiles("test")
 class UpdatePasswordUseCaseImplTest {
 
     @Autowired

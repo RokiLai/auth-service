@@ -1,69 +1,26 @@
-#debug: true
-
 spring:
-  config:
-    import:
-      - optional:nacos:auth-service.yml?group=DEFAULT_GROUP&refreshEnabled=true
-      - optional:nacos:auth-service-test.yml?group=DEFAULT_GROUP&refreshEnabled=true
   application:
-    name: auth-service
+    name: auth-service-test
+  config:
+    import: ""
   cloud:
     nacos:
       config:
-        server-addr: ${NACOS_SERVER_ADDR:192.168.31.169:8848}
-        username: ${NACOS_USERNAME:}
-        password: ${NACOS_PASSWORD:}
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        file-extension: yml
-        refresh-enabled: true
+        enabled: false
       discovery:
-        server-addr: ${NACOS_SERVER_ADDR:192.168.31.169:8848}
-        username: ${NACOS_USERNAME:}
-        password: ${NACOS_PASSWORD:}
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        register-enabled: true
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.31.169:3306/auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    username: root
-    password: 123456
-  data:
-    redis:
-      host: 192.168.31.169
-      port: 6379
-      #    password: # 如果有密码，写在这里；没有就删除这一行
-      timeout: 5000
+        enabled: false
+        register-enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
 
 dubbo:
-  application:
-    name: auth-service-rpc
-  protocol:
-    name: dubbo
-    port: 20880
-  registry:
-    address: nacos://${spring.cloud.nacos.discovery.server-addr}
-    username: ${spring.cloud.nacos.discovery.username}
-    password: ${spring.cloud.nacos.discovery.password}
-    group: ${spring.cloud.nacos.discovery.group}
-    parameters:
-      namespace: ${spring.cloud.nacos.discovery.namespace:}
-
-
-mybatis:
-  type-aliases-package: com.example.authservice.infra.po
-  mapper-locations: classpath*:mapper/*.xml
+  enabled: false
 
 jwt:
   secret: your-256-bit-secret-your-256-bit-secret
-  expire: 3600000 # 毫秒：1小时
-
-
-logging:
-  level:
-    com.example.authservice: info  # 你的业务包
-    org.mybatis: debug          # MyBatis 本身
-    org.mybatis.spring.SqlSessionFactoryBean: debug
-    org.apache.ibatis: debug    # ⬅️ 打印 SQL 和参数
-    com.alibaba.nacos: info
+  expire: 3600000

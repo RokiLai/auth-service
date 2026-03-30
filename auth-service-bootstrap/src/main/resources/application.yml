@@ -1,9 +1,5 @@
 # debug: true
 
-spring:
-  profiles:
-    active: dev
-
 roki:
   exception:
     error-code:
