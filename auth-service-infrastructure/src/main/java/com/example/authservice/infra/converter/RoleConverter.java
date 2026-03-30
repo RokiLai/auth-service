@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.example.authservice.domain.authorization.model.Role;
 import org.springframework.util.CollectionUtils;
 
-import com.example.authservice.domain.model.Role;
 import com.example.authservice.infra.po.RolePO;
 
 public class RoleConverter {

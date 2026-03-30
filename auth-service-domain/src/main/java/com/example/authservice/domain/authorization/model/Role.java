@@ -1,4 +1,4 @@
-package com.example.authservice.domain.model;
+package com.example.authservice.domain.authorization.model;
 
 import lombok.Getter;
 
