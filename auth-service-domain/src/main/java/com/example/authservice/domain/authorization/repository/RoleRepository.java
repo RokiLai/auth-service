@@ -1,11 +1,11 @@
-package com.example.authservice.domain.repo;
+package com.example.authservice.domain.authorization.repository;
 
 
 import java.util.List;
 
-import com.example.authservice.domain.model.Role;
+import com.example.authservice.domain.authorization.model.Role;
 
-public interface RoleRepo {
+public interface RoleRepository {
 
     /**
      * 查询所有角色

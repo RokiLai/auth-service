@@ -1,8 +1,8 @@
-package com.example.authservice.domain.repo;
+package com.example.authservice.domain.authorization.repository;
 
 import java.util.List;
 
-public interface RolePermissionRepo {
+public interface RolePermissionRepository {
 
     /**
      * 根据角色ID列表查询权限ID列表

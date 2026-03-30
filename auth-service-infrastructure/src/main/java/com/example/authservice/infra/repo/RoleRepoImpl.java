@@ -3,20 +3,18 @@ package com.example.authservice.infra.repo;
 import java.util.Collections;
 import java.util.List;
 
-import com.example.authservice.domain.model.Permission;
+import com.example.authservice.domain.authorization.model.Role;
+import com.example.authservice.domain.authorization.repository.RoleRepository;
 import com.example.authservice.infra.mapper.RolePermissionMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
-import com.example.authservice.domain.model.Role;
-import com.example.authservice.domain.repo.RoleRepo;
 import com.example.authservice.infra.converter.RoleConverter;
 import com.example.authservice.infra.mapper.RoleMapper;
 import com.example.authservice.infra.po.RolePO;
 
 @Repository
-public class RoleRepoImpl implements RoleRepo {
+public class RoleRepoImpl implements RoleRepository {
 
     private final RoleMapper roleMapper;
 

@@ -1,8 +1,8 @@
-package com.example.authservice.domain.repo;
+package com.example.authservice.domain.authorization.repository;
 
 import java.util.List;
 
-public interface AccountRoleRepo {
+public interface AccountRoleRepository {
 
     /**
      * 根据账号ID查询角色ID列表
