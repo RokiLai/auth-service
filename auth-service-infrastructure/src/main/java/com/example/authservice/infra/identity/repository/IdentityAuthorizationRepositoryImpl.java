@@ -2,12 +2,12 @@ package com.example.authservice.infra.identity.repository;
 
 import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentityAuthorizationRepository;
-import com.example.authservice.infra.mapper.PermissionMapper;
-import com.example.authservice.infra.mapper.RoleMapper;
-import com.example.authservice.infra.mapper.RolePermissionMapper;
-import com.example.authservice.infra.po.PermissionPO;
-import com.example.authservice.infra.po.RolePO;
-import com.example.authservice.infra.po.RolePermissionPO;
+import com.example.authservice.infra.authorization.mapper.PermissionMapper;
+import com.example.authservice.infra.authorization.mapper.RoleMapper;
+import com.example.authservice.infra.authorization.mapper.RolePermissionMapper;
+import com.example.authservice.infra.authorization.po.PermissionPO;
+import com.example.authservice.infra.authorization.po.RolePO;
+import com.example.authservice.infra.authorization.po.RolePermissionPO;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 

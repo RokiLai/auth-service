@@ -2,7 +2,7 @@ package com.example.authservice.infra.service;
 
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
-import com.example.authservice.infra.reids.RedisUtil;
+import com.example.authservice.infra.redis.RedisUtil;
 import com.example.authservice.util.config.JwtProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -4,10 +4,10 @@ import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.PasswordHash;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
-import com.example.authservice.infra.mapper.AccountMapper;
-import com.example.authservice.infra.mapper.AccountRoleMapper;
-import com.example.authservice.infra.po.AccountPO;
-import com.example.authservice.infra.po.AccountRolePO;
+import com.example.authservice.infra.authorization.mapper.AccountRoleMapper;
+import com.example.authservice.infra.authorization.po.AccountRolePO;
+import com.example.authservice.infra.identity.mapper.AccountMapper;
+import com.example.authservice.infra.identity.po.AccountPO;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 

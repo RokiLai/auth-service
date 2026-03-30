@@ -1,8 +1,8 @@
-package com.example.authservice.service.impl;
+package com.example.authservice.authorization.usecase;
 
 import java.util.Set;
 
-public interface RoleService {
+public interface AuthorizeRoleUseCase {
     /**
      * 批量授权
      * @param roleId

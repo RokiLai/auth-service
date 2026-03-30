@@ -1,4 +1,4 @@
-package com.example.authservice.infra.po;
+package com.example.authservice.infra.identity.po;
 
 
 import lombok.Data;

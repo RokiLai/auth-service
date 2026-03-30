@@ -1,5 +1,6 @@
-package com.example.authservice.service.impl;
+package com.example.authservice.authorization.usecase.impl;
 
+import com.example.authservice.authorization.usecase.AuthorizeRoleUseCase;
 import com.example.authservice.domain.authorization.model.Role;
 import com.example.authservice.domain.authorization.repository.RoleRepository;
 import com.example.authservice.exception.auth.RoleAuthorizeParamInvalidException;
@@ -7,11 +8,11 @@ import com.example.authservice.exception.auth.RoleAuthorizeParamInvalidException
 import java.util.ArrayList;
 import java.util.Set;
 
-public class RoleServiceImpl implements RoleService {
+public class AuthorizeRoleUseCaseImpl implements AuthorizeRoleUseCase {
 
     private final RoleRepository roleRepository;
 
-    public RoleServiceImpl(RoleRepository roleRepository) {
+    public AuthorizeRoleUseCaseImpl(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
     }
 

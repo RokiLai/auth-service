@@ -1,4 +1,4 @@
-package com.example.authservice.infra.reids;
+package com.example.authservice.infra.redis;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

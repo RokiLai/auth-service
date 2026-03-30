@@ -1,6 +1,6 @@
-package com.example.authservice.infra.mapper;
+package com.example.authservice.infra.authorization.mapper;
 
-import com.example.authservice.infra.po.AccountRolePO;
+import com.example.authservice.infra.authorization.po.AccountRolePO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

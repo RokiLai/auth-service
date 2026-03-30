@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.authservice.infra.mapper.AccountRoleMapper">
+<mapper namespace="com.example.authservice.infra.authorization.mapper.AccountRoleMapper">
 
     <!-- 基础列映射 -->
-    <resultMap id="BaseResultMap" type="com.example.authservice.infra.po.AccountRolePO">
+    <resultMap id="BaseResultMap" type="com.example.authservice.infra.authorization.po.AccountRolePO">
         <result column="account_id" property="accountId"/>
         <result column="role_id" property="roleId"/>
     </resultMap>
@@ -14,7 +14,7 @@
     </sql>
 
     <!-- 插入账户角色关联记录 -->
-    <insert id="insert" parameterType="com.example.authservice.infra.po.AccountRolePO">
+    <insert id="insert" parameterType="com.example.authservice.infra.authorization.po.AccountRolePO">
         INSERT INTO account_role (
             account_id, role_id
         ) VALUES (

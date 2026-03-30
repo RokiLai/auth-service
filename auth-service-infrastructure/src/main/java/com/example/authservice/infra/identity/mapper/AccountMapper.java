@@ -1,6 +1,6 @@
-package com.example.authservice.infra.mapper;
+package com.example.authservice.infra.identity.mapper;
 
-import com.example.authservice.infra.po.AccountPO;
+import com.example.authservice.infra.identity.po.AccountPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

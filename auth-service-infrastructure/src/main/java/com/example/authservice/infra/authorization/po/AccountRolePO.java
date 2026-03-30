@@ -1,4 +1,4 @@
-package com.example.authservice.infra.po;
+package com.example.authservice.infra.authorization.po;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,5 +11,4 @@ public class AccountRolePO {
     private Long accountId;
     private Long roleId;
 }
-
 
