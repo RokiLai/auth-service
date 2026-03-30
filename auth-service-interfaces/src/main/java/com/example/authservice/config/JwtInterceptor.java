@@ -6,7 +6,6 @@ import com.example.authservice.exception.auth.TokenInvalidException;
 import com.example.authservice.exception.auth.TokenMissingException;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
 import com.roki.exception.exception.BusinessException;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
