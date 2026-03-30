@@ -1,8 +1,10 @@
 package com.example.authservice;
 
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@EnableDiscoveryClient
 @SpringBootApplication(scanBasePackages = "com.example.authservice")
 public class AuthServiceApplication {
 
