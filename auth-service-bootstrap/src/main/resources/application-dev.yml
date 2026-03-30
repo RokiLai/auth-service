@@ -39,6 +39,20 @@ spring:
       #    password: # 如果有密码，写在这里；没有就删除这一行
       timeout: 5000
 
+dubbo:
+  application:
+    name: auth-service-rpc
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    address: nacos://${spring.cloud.nacos.discovery.server-addr}
+    username: ${spring.cloud.nacos.discovery.username}
+    password: ${spring.cloud.nacos.discovery.password}
+    group: ${spring.cloud.nacos.discovery.group}
+    parameters:
+      namespace: ${spring.cloud.nacos.discovery.namespace:}
+
 
 mybatis:
   type-aliases-package: com.example.authservice.infra.po
