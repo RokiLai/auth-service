@@ -1,5 +1,6 @@
 package com.example.authservice.infra.authorization.repository;
 
+import com.example.authservice.domain.authorization.model.Permission;
 import com.example.authservice.domain.authorization.repository.PermissionRepository;
 import com.example.authservice.infra.authorization.mapper.PermissionMapper;
 import com.example.authservice.infra.authorization.po.PermissionPO;
@@ -17,9 +18,18 @@ public class PermissionRepositoryImpl implements PermissionRepository {
     }
 
     @Override
-    public List<String> selectCodeByIds(List<Long> permissionIds) {
+    public List<Permission> findByIds(List<Long> permissionIds) {
         if (CollectionUtils.isEmpty(permissionIds)) {
+            return List.of();
+        }
+        return permissionMapper.selectByIds(permissionIds).stream()
+                .map(permissionPO -> new Permission(permissionPO.getId(), permissionPO.getCode()))
+                .toList();
+    }
 
+    @Override
+    public List<String> findCodesByIds(List<Long> permissionIds) {
+        if (CollectionUtils.isEmpty(permissionIds)) {
             return List.of();
         }
         return permissionMapper.selectByIds(permissionIds).stream().map(PermissionPO::getCode).toList();

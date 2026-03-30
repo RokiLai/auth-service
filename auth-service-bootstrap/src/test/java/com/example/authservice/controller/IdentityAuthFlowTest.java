@@ -10,7 +10,7 @@ import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
 import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
-import com.example.authservice.domain.identity.repository.IdentityAuthorizationRepository;
+import com.example.authservice.domain.authorization.service.AuthorizationDomainService;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.impl.AuthenticationDomainServiceImpl;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
@@ -90,7 +90,7 @@ class IdentityAuthFlowTest {
     private IdentityAccountRepository identityAccountRepository;
 
     @MockBean
-    private IdentityAuthorizationRepository identityAuthorizationRepository;
+    private AuthorizationDomainService authorizationDomainService;
 
     @MockBean
     private RegisterUseCase registerUseCase;

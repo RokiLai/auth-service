@@ -26,7 +26,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public List<Role> selectAll() {
+    public List<Role> findAll() {
         List<RolePO> rolePOs = roleMapper.selectAll();
         if (CollectionUtils.isEmpty(rolePOs)) {
             return Collections.emptyList();
@@ -35,7 +35,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public List<Role> selectByIds(List<Long> roleIds) {
+    public List<Role> findByIds(List<Long> roleIds) {
         List<RolePO> rolePOs = roleMapper.selectByIds(roleIds);
         if (CollectionUtils.isEmpty(rolePOs)) {
             return Collections.emptyList();
@@ -44,7 +44,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public Role selectById(Long roleId) {
+    public Role findById(Long roleId) {
         RolePO rolePO = roleMapper.selectById(roleId);
         if (rolePO == null) {
             return null;
@@ -53,7 +53,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public List<String> selectCodeByIds(List<Long> roleIds) {
+    public List<String> findCodesByIds(List<Long> roleIds) {
         if (CollectionUtils.isEmpty(roleIds)) {
             return List.of();
         }
@@ -61,8 +61,8 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public void updateRolePermission(Role role) {
+    public void save(Role role) {
         rolePermissionMapper.deleteByRoleId(role.getId());
-        rolePermissionMapper.insertRolePermissions(role.getId(), role.getPermissionIds());
+        rolePermissionMapper.insertRolePermissions(role.getId(), role.permissionIds());
     }
 }
