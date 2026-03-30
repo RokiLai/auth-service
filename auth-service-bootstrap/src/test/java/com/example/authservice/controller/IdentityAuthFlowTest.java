@@ -2,7 +2,7 @@ package com.example.authservice.controller;
 
 import com.example.authservice.config.JwtInterceptor;
 import com.example.authservice.config.WebConfig;
-import com.example.authservice.config.CurrentIdentityArgumentResolver;
+import com.example.authservice.config.CurrentOperatorArgumentResolver;
 import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
@@ -363,7 +363,7 @@ class IdentityAuthFlowTest {
     @Import({
             IdentityController.class,
             JwtInterceptor.class,
-            CurrentIdentityArgumentResolver.class,
+            CurrentOperatorArgumentResolver.class,
             WebConfig.class,
             JwtUtil.class,
             JwtProperties.class,

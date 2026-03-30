@@ -22,9 +22,9 @@ import java.lang.reflect.Method;
 public class JwtInterceptor implements HandlerInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
-    // 认证通过后把当前身份放进 request，供参数解析器和控制器读取。
-    // Stores the authenticated identity on the request for argument resolution and controller access.
-    public static final String CURRENT_IDENTITY_ATTR = "currentIdentity";
+    // 认证通过后把当前操作者放进 request，供参数解析器和控制器读取。
+    // Stores the current operator on the request for argument resolution and controller access.
+    public static final String CURRENT_OPERATOR_ATTR = "currentOperator";
     private static final Logger logger = LoggerFactory.getLogger(JwtInterceptor.class); // 添加日志记录器
 
     private final AuthenticateUseCase authenticateUseCase;
@@ -63,12 +63,12 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         try {
             String token = resolveToken(authorizationHeader);
-            CurrentOperator currentIdentity = authenticateUseCase.authenticate(token);
-            logger.info("Token 验证通过，用户: {}", currentIdentity.username());
-            // 接口层通过 request attribute 传递当前身份，避免应用层依赖 ThreadLocal。
-            // Passes identity through request attributes so upper layers no longer depend on ThreadLocal.
-            request.setAttribute("username", currentIdentity.username());
-            request.setAttribute(CURRENT_IDENTITY_ATTR, currentIdentity);
+            CurrentOperator currentOperator = authenticateUseCase.authenticate(token);
+            logger.info("Token 验证通过，用户: {}", currentOperator.username());
+            // 接口层通过 request attribute 传递当前操作者，避免应用层依赖 ThreadLocal。
+            // Passes the current operator through request attributes so upper layers no longer depend on ThreadLocal.
+            request.setAttribute("username", currentOperator.username());
+            request.setAttribute(CURRENT_OPERATOR_ATTR, currentOperator);
         } catch (BusinessException e) {
             logger.warn("Token 校验未通过: {}", e.getMessage());
             throw e;

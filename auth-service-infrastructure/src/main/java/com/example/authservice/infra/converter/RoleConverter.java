@@ -23,10 +23,7 @@ public class RoleConverter {
         if (rolePO == null) {
             return null;
         }
-        Role role = new Role();
-        role.setId(rolePO.getId());
-        role.setCode(rolePO.getCode());
-        return role;
+        return Role.restore(rolePO.getId(), rolePO.getCode(), List.of());
     }
 
     public static List<Role> convertList(List<RolePO> rolePOs) {

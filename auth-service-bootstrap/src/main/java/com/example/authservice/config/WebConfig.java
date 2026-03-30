@@ -11,12 +11,12 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     private final JwtInterceptor jwtInterceptor;
-    private final CurrentIdentityArgumentResolver currentIdentityArgumentResolver;
+    private final CurrentOperatorArgumentResolver currentOperatorArgumentResolver;
 
     public WebConfig(JwtInterceptor jwtInterceptor,
-                     CurrentIdentityArgumentResolver currentIdentityArgumentResolver) {
+                     CurrentOperatorArgumentResolver currentOperatorArgumentResolver) {
         this.jwtInterceptor = jwtInterceptor;
-        this.currentIdentityArgumentResolver = currentIdentityArgumentResolver;
+        this.currentOperatorArgumentResolver = currentOperatorArgumentResolver;
     }
 
     @Override
@@ -37,9 +37,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        // 注册当前身份参数解析器，使控制器可以直接声明 @AuthIdentity CurrentOperator。
-        // Registers the identity argument resolver so controllers can declare @AuthIdentity CurrentOperator directly.
-        resolvers.add(currentIdentityArgumentResolver);
+        // 注册当前操作者参数解析器，使控制器可以直接声明 @AuthIdentity CurrentOperator。
+        // Registers the current-operator argument resolver so controllers can declare @AuthIdentity CurrentOperator directly.
+        resolvers.add(currentOperatorArgumentResolver);
     }
 
 }
