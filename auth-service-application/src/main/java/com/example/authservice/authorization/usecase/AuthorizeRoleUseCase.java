@@ -1,12 +1,11 @@
 package com.example.authservice.authorization.usecase;
 
-import java.util.Set;
+import com.example.authservice.authorization.usecase.command.AuthorizeRoleCommand;
 
 public interface AuthorizeRoleUseCase {
     /**
      * 批量授权
-     * @param roleId
-     * @param permissionIds
+     * Batch-authorizes a role with the latest permission set.
      */
-    void batchAuthorize(Long roleId, Set<Long> permissionIds);
+    void batchAuthorize(AuthorizeRoleCommand command);
 }
