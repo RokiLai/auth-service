@@ -14,7 +14,7 @@ class BcryptPasswordHasherTest {
     void shouldEncodeNewPasswordAsBcrypt() {
         PasswordHash encoded = passwordHasher.encode(new RawPassword("123456"));
 
-        assertThat(encoded.getValue()).startsWith("$2");
+        assertThat(encoded.value()).startsWith("$2");
         assertThat(passwordHasher.matches(new RawPassword("123456"), encoded)).isTrue();
         assertThat(passwordHasher.matches(new RawPassword("654321"), encoded)).isFalse();
     }

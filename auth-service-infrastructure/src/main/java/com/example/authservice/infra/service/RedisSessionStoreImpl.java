@@ -2,9 +2,8 @@ package com.example.authservice.infra.service;
 
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
-import com.example.authservice.infra.reids.RedisUtil;
+import com.example.authservice.infra.redis.RedisUtil;
 import com.example.authservice.util.config.JwtProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -15,11 +14,13 @@ public class RedisSessionStoreImpl implements IdentitySessionRepository {
     private static final String SESSION_KEY_PREFIX = "login:session:";
     private static final String USER_SESSION_KEY_PREFIX = "login:user_session:";
 
-    @Autowired
-    private RedisUtil redisUtil;
+    private final RedisUtil redisUtil;
+    private final JwtProperties jwtProperties;
 
-    @Autowired
-    private JwtProperties jwtProperties;
+    public RedisSessionStoreImpl(RedisUtil redisUtil, JwtProperties jwtProperties) {
+        this.redisUtil = redisUtil;
+        this.jwtProperties = jwtProperties;
+    }
 
     @Override
     public void save(IdentitySession session) {

@@ -1,8 +1,29 @@
 #debug: true
 
 spring:
+  config:
+    import:
+      - optional:nacos:auth-service.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:auth-service-test.yml?group=DEFAULT_GROUP&refreshEnabled=true
   application:
     name: auth-service
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:192.168.31.169:8848}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        file-extension: yml
+        refresh-enabled: true
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:192.168.31.169:8848}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        register-enabled: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.31.169:3306/auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
@@ -31,3 +52,4 @@ logging:
     org.mybatis: debug          # MyBatis 本身
     org.mybatis.spring.SqlSessionFactoryBean: debug
     org.apache.ibatis: debug    # ⬅️ 打印 SQL 和参数
+    com.alibaba.nacos: info

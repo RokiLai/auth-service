@@ -1,8 +1,8 @@
 package com.example.authservice.identity.usecase;
 
-import com.example.authservice.domain.identity.model.result.CurrentIdentity;
+import com.example.authservice.application.context.CurrentOperator;
 
 public interface AuthenticateUseCase {
 
-    CurrentIdentity authenticate(String rawToken);
+    CurrentOperator authenticate(String rawToken);
 }

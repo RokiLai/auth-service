@@ -3,16 +3,16 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.authservice.infra.mapper.RoleMapper">
+<mapper namespace="com.example.authservice.infra.authorization.mapper.RoleMapper">
 
     <!-- 查询所有角色 -->
-    <select id="selectAll" resultType="com.example.authservice.infra.po.RolePO">
+    <select id="selectAll" resultType="com.example.authservice.infra.authorization.po.RolePO">
         SELECT id, code
         FROM role
     </select>
 
     <!-- 根据角色ID列表查询角色 -->
-    <select id="selectByIds" resultType="com.example.authservice.infra.po.RolePO">
+    <select id="selectByIds" resultType="com.example.authservice.infra.authorization.po.RolePO">
         SELECT id, code
         FROM role
         WHERE id IN
@@ -22,13 +22,13 @@
     </select>
 
     <!-- 新增角色 -->
-    <insert id="insert" parameterType="com.example.authservice.infra.po.RolePO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.example.authservice.infra.authorization.po.RolePO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO role (code)
         VALUES (#{code})
     </insert>
 
     <!-- 根据角色ID查询 -->
-    <select id="selectById" resultType="com.example.authservice.infra.po.RolePO">
+    <select id="selectById" resultType="com.example.authservice.infra.authorization.po.RolePO">
         SELECT id, code
         FROM role
         WHERE id = #{roleId}

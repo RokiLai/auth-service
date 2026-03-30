@@ -2,16 +2,17 @@ package com.example.authservice.controller;
 
 import com.example.authservice.config.JwtInterceptor;
 import com.example.authservice.config.WebConfig;
-import com.example.authservice.config.CurrentIdentityArgumentResolver;
-import com.example.authservice.domain.identity.model.entity.IdentityAccount;
-import com.example.authservice.domain.identity.model.entity.IdentitySession;
-import com.example.authservice.domain.identity.model.result.AuthorizationSnapshot;
-import com.example.authservice.domain.identity.model.result.CurrentIdentity;
+import com.example.authservice.config.CurrentOperatorArgumentResolver;
 import com.example.authservice.application.context.CurrentOperator;
+import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
+import com.example.authservice.domain.identity.model.entity.IdentitySession;
+import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
+import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
+import com.example.authservice.domain.authorization.service.AuthorizationDomainService;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.impl.AuthenticationDomainServiceImpl;
-import com.example.authservice.domain.identity.service.AuthorizationSnapshotProvider;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
 import com.example.authservice.identity.usecase.LogoutUseCase;
 import com.example.authservice.identity.usecase.RegisterUseCase;
@@ -77,6 +78,9 @@ class IdentityAuthFlowTest {
     private BcryptPasswordHasher passwordHasher;
 
     @Autowired
+    private IdentityAccountFactory identityAccountFactory;
+
+    @Autowired
     private AuthenticateUseCase authenticateUseCase;
 
     @Autowired
@@ -86,7 +90,7 @@ class IdentityAuthFlowTest {
     private IdentityAccountRepository identityAccountRepository;
 
     @MockBean
-    private AuthorizationSnapshotProvider authorizationSnapshotProvider;
+    private AuthorizationDomainService authorizationDomainService;
 
     @MockBean
     private RegisterUseCase registerUseCase;
@@ -103,7 +107,7 @@ class IdentityAuthFlowTest {
     void loginLogoutFlowShouldCreateAndInvalidateSessionBackedToken() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -161,7 +165,7 @@ class IdentityAuthFlowTest {
     void secondLoginShouldInvalidatePreviousToken() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -243,7 +247,7 @@ class IdentityAuthFlowTest {
     void bareTokenShouldBeRejectedWhenBearerPrefixIsMissing() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -273,7 +277,7 @@ class IdentityAuthFlowTest {
     void tamperedBearerTokenShouldBeRejectedAsInvalid() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -306,7 +310,7 @@ class IdentityAuthFlowTest {
     void staleAuthenticatedRequestShouldNotDeleteNewSessionOnLogout() throws Exception {
         String username = "tester";
         String password = "123456";
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
@@ -327,7 +331,7 @@ class IdentityAuthFlowTest {
 
         oldToken = bearerToken(oldToken);
 
-        CurrentIdentity staleIdentity = authenticateUseCase.authenticate(oldToken);
+        CurrentOperator staleIdentity = authenticateUseCase.authenticate(oldToken);
 
         String newToken = mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -348,7 +352,7 @@ class IdentityAuthFlowTest {
         assertThat(sessionRepository.findBySessionId(oldSessionId)).isNull();
         assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
 
-        assertThat(logoutUseCase.logout(new LogoutCommand(CurrentOperator.from(staleIdentity)))).isTrue();
+        assertThat(logoutUseCase.logout(new LogoutCommand(staleIdentity))).isTrue();
 
         assertThat(sessionRepository.findBySessionId(newSessionId)).isNotNull();
         assertThat(sessionRepository.findSessionIdByAccountId(1L)).isEqualTo(newSessionId);
@@ -359,12 +363,14 @@ class IdentityAuthFlowTest {
     @Import({
             IdentityController.class,
             JwtInterceptor.class,
-            CurrentIdentityArgumentResolver.class,
+            CurrentOperatorArgumentResolver.class,
             WebConfig.class,
             JwtUtil.class,
             JwtProperties.class,
             JwtIdentityTokenProvider.class,
             BcryptPasswordHasher.class,
+            IdentityAccountFactory.class,
+            IdentitySessionFactory.class,
             AuthenticationDomainServiceImpl.class,
             LoginUseCaseImpl.class,
             LogoutUseCaseImpl.class,

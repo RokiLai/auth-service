@@ -1,7 +1,8 @@
 package com.example.authservice.infra.service;
 
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
-import com.example.authservice.infra.reids.RedisUtil;
+import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
+import com.example.authservice.infra.redis.RedisUtil;
 import com.example.authservice.util.config.JwtProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RedisSessionStoreImplTest {
 
+    private final IdentitySessionFactory identitySessionFactory = new IdentitySessionFactory();
+
     @Mock
     private RedisUtil redisUtil;
 
@@ -33,9 +36,7 @@ class RedisSessionStoreImplTest {
     void saveAndBindUserSessionShouldUseExpectedRedisKeysAndJwtTtl() {
         when(jwtProperties.getExpire()).thenReturn(3_600_000L);
 
-        IdentitySession session = new IdentitySession();
-        session.setSessionId("sid-123");
-        session.setAccountId(42L);
+        IdentitySession session = identitySessionFactory.restore("sid-123", 42L, null, null, null, null);
 
         sessionStore.save(session);
 
@@ -56,8 +57,7 @@ class RedisSessionStoreImplTest {
 
     @Test
     void findByAccountIdShouldResolveSessionIdFromUserBinding() {
-        IdentitySession session = new IdentitySession();
-        session.setSessionId("sid-123");
+        IdentitySession session = identitySessionFactory.restore("sid-123", null, null, null, null, null);
         when(redisUtil.get("login:user_session:42")).thenReturn("sid-123");
         when(redisUtil.get("login:session:sid-123")).thenReturn(session);
 

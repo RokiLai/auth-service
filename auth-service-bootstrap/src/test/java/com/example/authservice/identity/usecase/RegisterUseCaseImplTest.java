@@ -1,6 +1,7 @@
 package com.example.authservice.identity.usecase;
 
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.RawPassword;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.domain.identity.service.PasswordHasher;
@@ -21,22 +22,19 @@ class RegisterUseCaseImplTest {
 
     private final IdentityAccountRepository identityAccountRepository = mock(IdentityAccountRepository.class);
     private final PasswordHasher passwordHasher = new BcryptPasswordHasher();
+    private final IdentityAccountFactory identityAccountFactory = new IdentityAccountFactory();
 
     private RegisterUseCase registerUseCase;
 
     @BeforeEach
     void setUp() {
-        registerUseCase = new RegisterUseCaseImpl(identityAccountRepository, passwordHasher);
+        registerUseCase = new RegisterUseCaseImpl(identityAccountRepository, passwordHasher, identityAccountFactory);
     }
 
     @Test
     void registerShouldCreateIdentityAccountAndPersistIt() {
         when(identityAccountRepository.findByUsername("new-user")).thenReturn(null);
-        doAnswer(invocation -> {
-            IdentityAccount account = invocation.getArgument(0);
-            account.setId(1L);
-            return null;
-        }).when(identityAccountRepository).save(any(IdentityAccount.class));
+        doAnswer(invocation -> null).when(identityAccountRepository).save(any(IdentityAccount.class));
 
         boolean registered = registerUseCase.register(new RegisterCommand(
                 "new-user",

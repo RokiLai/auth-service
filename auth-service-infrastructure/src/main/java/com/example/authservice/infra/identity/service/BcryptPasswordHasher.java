@@ -13,14 +13,14 @@ public class BcryptPasswordHasher implements PasswordHasher {
 
     @Override
     public PasswordHash encode(RawPassword rawPassword) {
-        return new PasswordHash(delegate.encode(rawPassword.getValue()));
+        return new PasswordHash(delegate.encode(rawPassword.value()));
     }
 
     @Override
     public boolean matches(RawPassword rawPassword, PasswordHash passwordHash) {
-        if (rawPassword == null || passwordHash == null || passwordHash.getValue() == null) {
+        if (rawPassword == null || passwordHash == null || passwordHash.value() == null) {
             return false;
         }
-        return delegate.matches(rawPassword.getValue(), passwordHash.getValue());
+        return delegate.matches(rawPassword.value(), passwordHash.value());
     }
 }

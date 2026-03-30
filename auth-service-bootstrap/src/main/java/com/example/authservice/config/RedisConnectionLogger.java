@@ -1,7 +1,6 @@
 package com.example.authservice.config;
 
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Component;
 
@@ -9,8 +8,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisConnectionLogger {
 
-    @Autowired
-    private RedisConnectionFactory redisConnectionFactory;
+    private final RedisConnectionFactory redisConnectionFactory;
+
+    public RedisConnectionLogger(RedisConnectionFactory redisConnectionFactory) {
+        this.redisConnectionFactory = redisConnectionFactory;
+    }
 
     @PostConstruct
     public void log() {

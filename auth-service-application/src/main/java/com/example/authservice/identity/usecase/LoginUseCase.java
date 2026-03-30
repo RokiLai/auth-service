@@ -1,6 +1,6 @@
 package com.example.authservice.identity.usecase;
 
-import com.example.authservice.identity.dto.LoginResult;
+import com.example.authservice.identity.usecase.result.LoginResult;
 
 public interface LoginUseCase {
 

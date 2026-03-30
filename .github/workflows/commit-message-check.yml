@@ -2,9 +2,6 @@ name: Commit Message Check
 
 on:
   push:
-    branches:
-      - master
-      - main
   pull_request:
     branches:
       - master
@@ -33,6 +30,7 @@ jobs:
             local message
             local subject
             local body
+            local title_subject
             local second_line
             local non_empty_body
             local line_no=3
@@ -40,13 +38,21 @@ jobs:
 
             message="$(git log --format=%B -n 1 "$commit_sha")"
             subject="$(printf '%s\n' "$message" | sed -n '1p')"
+            title_subject="$(printf '%s\n' "$subject" | sed -E 's/^(build|feat|fix|refactor|test|docs|chore): //')"
             second_line="$(printf '%s\n' "$message" | sed -n '2p')"
             body="$(printf '%s\n' "$message" | sed -n '3,$p')"
             non_empty_body="$(printf '%s\n' "$body" | sed '/^[[:space:]]*$/d')"
 
             if ! printf '%s\n' "$subject" | grep -Eq "$header_pattern"; then
               echo "::error::Commit $commit_sha 的标题不符合规范：$subject"
-              echo "要求：type: subject"
+              echo "要求：type: 中文标题"
+              return 1
+            fi
+
+            if ! printf '%s\n' "$title_subject" | perl -CSDA -ne '$ok ||= /[\x{4E00}-\x{9FFF}]/; END { exit($ok ? 0 : 1) }'; then
+              echo "::error::Commit $commit_sha 的标题必须使用中文语义：$subject"
+              echo "要求：type: 中文标题"
+              echo "示例：feat: 新增角色授权接口"
               return 1
             fi
 

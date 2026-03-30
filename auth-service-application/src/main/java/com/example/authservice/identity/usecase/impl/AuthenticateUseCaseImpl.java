@@ -1,7 +1,7 @@
 package com.example.authservice.identity.usecase.impl;
 
+import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
-import com.example.authservice.domain.identity.model.result.CurrentIdentity;
 import com.example.authservice.domain.identity.model.valueobject.TokenClaims;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.IdentityTokenProvider;
@@ -24,10 +24,10 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
     }
 
     @Override
-    public CurrentIdentity authenticate(String rawToken) {
+    public CurrentOperator authenticate(String rawToken) {
         try {
             TokenClaims claims = identityTokenProvider.parse(rawToken);
-            String sessionId = claims.getSessionId();
+            String sessionId = claims.sessionId();
             if (sessionId == null || sessionId.isBlank()) {
                 throw new TokenInvalidException();
             }
@@ -38,14 +38,14 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
                 throw new TokenExpiredException();
             }
 
-            CurrentIdentity identity = new CurrentIdentity();
-            identity.setId(session.getAccountId());
-            identity.setUsername(session.getUsername());
-            identity.setSessionId(session.getSessionId());
-            identity.setToken(session.getToken());
-            identity.setRoles(session.getRoles());
-            identity.setPermissions(session.getPermissions());
-            return identity;
+            return new CurrentOperator(
+                    session.getAccountId(),
+                    session.getUsername(),
+                    session.getSessionId(),
+                    session.getToken(),
+                    session.getRoles(),
+                    session.getPermissions()
+            );
         } catch (JwtException e) {
             throw new TokenInvalidException();
         }

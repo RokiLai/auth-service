@@ -7,8 +7,6 @@ import com.example.authservice.controller.request.LoginRequest;
 import com.example.authservice.controller.request.RegisterRequest;
 import com.example.authservice.controller.request.UpdatePasswordRequest;
 import com.example.authservice.controller.response.LoginResponse;
-import com.example.authservice.domain.identity.model.result.CurrentIdentity;
-import com.example.authservice.identity.dto.LoginResult;
 import com.example.authservice.identity.usecase.LoginUseCase;
 import com.example.authservice.identity.usecase.LogoutUseCase;
 import com.example.authservice.identity.usecase.RegisterUseCase;
@@ -16,10 +14,10 @@ import com.example.authservice.identity.usecase.UpdatePasswordUseCase;
 import com.example.authservice.identity.usecase.command.LogoutCommand;
 import com.example.authservice.identity.usecase.command.RegisterCommand;
 import com.example.authservice.identity.usecase.command.UpdatePasswordCommand;
+import com.example.authservice.identity.usecase.result.LoginResult;
 import com.roki.exception.result.Result;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,25 +29,28 @@ public class IdentityController {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    @Autowired
-    private LoginUseCase loginUseCase;
+    private final LoginUseCase loginUseCase;
+    private final LogoutUseCase logoutUseCase;
+    private final RegisterUseCase registerUseCase;
+    private final UpdatePasswordUseCase updatePasswordUseCase;
 
-    @Autowired
-    private LogoutUseCase logoutUseCase;
-
-    @Autowired
-    private RegisterUseCase registerUseCase;
-
-    @Autowired
-    private UpdatePasswordUseCase updatePasswordUseCase;
+    public IdentityController(LoginUseCase loginUseCase,
+                              LogoutUseCase logoutUseCase,
+                              RegisterUseCase registerUseCase,
+                              UpdatePasswordUseCase updatePasswordUseCase) {
+        this.loginUseCase = loginUseCase;
+        this.logoutUseCase = logoutUseCase;
+        this.registerUseCase = registerUseCase;
+        this.updatePasswordUseCase = updatePasswordUseCase;
+    }
 
     @PassToken
     @PostMapping("/register")
     public Result<Boolean> register(@Valid @RequestBody RegisterRequest request) {
         registerUseCase.register(new RegisterCommand(
-                request.getUsername(),
-                request.getPassword(),
-                request.getEmail()
+                request.username(),
+                request.password(),
+                request.email()
         ));
         return Result.success(true);
     }
@@ -58,12 +59,12 @@ public class IdentityController {
     @PostMapping("/login")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                        HttpServletResponse response) {
-        LoginResult loginResult = loginUseCase.login(request.getUsername(), request.getPassword());
+        LoginResult loginResult = loginUseCase.login(request.username(), request.password());
         LoginResponse loginResponse = new LoginResponse(
-                loginResult.getId(),
-                loginResult.getUsername(),
-                loginResult.getEmail(),
-                loginResult.getToken()
+                loginResult.id(),
+                loginResult.username(),
+                loginResult.email(),
+                loginResult.token()
         );
         response.setHeader("Authorization", BEARER_PREFIX + loginResponse.token());
         response.setHeader("Access-Control-Expose-Headers", "Authorization");
@@ -73,21 +74,19 @@ public class IdentityController {
     @PostMapping("/logout")
     // 当前登录身份由接口层注入，再显式传入应用用例。
     // The current authenticated identity is injected at the interface layer and then passed explicitly to the use case.
-    public Result<Boolean> logout(@AuthIdentity CurrentIdentity currentIdentity) {
-        // 控制器只负责把接口层身份对象转换成应用层命令对象。
-        // The controller only translates the interface-layer identity into an application command object.
-        return Result.success(logoutUseCase.logout(new LogoutCommand(CurrentOperator.from(currentIdentity))));
+    public Result<Boolean> logout(@AuthIdentity CurrentOperator currentOperator) {
+        return Result.success(logoutUseCase.logout(new LogoutCommand(currentOperator)));
     }
 
     @PostMapping("/update-password")
     // 改密属于身份能力，由 identity 控制器承接认证上下文并转给应用用例。
     // Password updates belong to the identity capability, so the identity controller maps authenticated context into the use case command.
     public Result<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
-                                          @AuthIdentity CurrentIdentity currentIdentity) {
+                                          @AuthIdentity CurrentOperator currentOperator) {
         updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
-                CurrentOperator.from(currentIdentity),
-                request.getOldPassword(),
-                request.getNewPassword()
+                currentOperator,
+                request.oldPassword(),
+                request.newPassword()
         ));
         return Result.success(true);
     }

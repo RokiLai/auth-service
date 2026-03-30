@@ -1,12 +1,13 @@
 package com.example.authservice.infra.identity.repository;
 
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.PasswordHash;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
-import com.example.authservice.infra.mapper.AccountMapper;
-import com.example.authservice.infra.mapper.AccountRoleMapper;
-import com.example.authservice.infra.po.AccountPO;
-import com.example.authservice.infra.po.AccountRolePO;
+import com.example.authservice.infra.authorization.mapper.AccountRoleMapper;
+import com.example.authservice.infra.authorization.po.AccountRolePO;
+import com.example.authservice.infra.identity.mapper.AccountMapper;
+import com.example.authservice.infra.identity.po.AccountPO;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
@@ -17,11 +18,14 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
 
     private final AccountMapper accountMapper;
     private final AccountRoleMapper accountRoleMapper;
+    private final IdentityAccountFactory identityAccountFactory;
 
     public IdentityAccountRepositoryImpl(AccountMapper accountMapper,
-                                         AccountRoleMapper accountRoleMapper) {
+                                         AccountRoleMapper accountRoleMapper,
+                                         IdentityAccountFactory identityAccountFactory) {
         this.accountMapper = accountMapper;
         this.accountRoleMapper = accountRoleMapper;
+        this.identityAccountFactory = identityAccountFactory;
     }
 
     @Override
@@ -31,7 +35,7 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
             return null;
         }
         List<AccountRolePO> accountRolePOS = accountRoleMapper.selectByAccountId(account.getId());
-        return new IdentityAccount(
+        return identityAccountFactory.restore(
                 account.getId(),
                 account.getUsername(),
                 new PasswordHash(account.getPassword()),
@@ -45,7 +49,7 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
         AccountPO po = new AccountPO();
         po.setId(account.getId());
         po.setUsername(account.getUsername());
-        po.setPassword(account.getPasswordHash().getValue());
+        po.setPassword(account.getPasswordHash().value());
         po.setEmail(account.getEmail());
         if (po.getId() == null) {
             accountMapper.insert(po);

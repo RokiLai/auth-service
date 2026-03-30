@@ -2,6 +2,7 @@ package com.example.authservice.identity.usecase;
 
 import com.example.authservice.application.context.CurrentOperator;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
+import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.RawPassword;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
@@ -43,6 +44,9 @@ class UpdatePasswordUseCaseImplTest {
     @Autowired
     private PasswordHasher passwordHasher;
 
+    @Autowired
+    private IdentityAccountFactory identityAccountFactory;
+
     @MockBean
     private IdentityAccountRepository identityAccountRepository;
 
@@ -56,7 +60,7 @@ class UpdatePasswordUseCaseImplTest {
 
     @Test
     void updatePasswordShouldPersistNewHashAndInvalidateCurrentSession() {
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 "tester",
                 passwordHasher.encode(new RawPassword("123456")),
@@ -67,7 +71,7 @@ class UpdatePasswordUseCaseImplTest {
         when(identitySessionRepository.findSessionIdByAccountId(1L)).thenReturn("session-1");
 
         boolean updated = updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
-                new CurrentOperator(1L, "tester", "session-1", null, null),
+                new CurrentOperator(1L, "tester", "session-1", null, null, null),
                 "123456",
                 "654321"
         ));
@@ -81,7 +85,7 @@ class UpdatePasswordUseCaseImplTest {
 
     @Test
     void updatePasswordShouldRejectWrongOldPassword() {
-        IdentityAccount account = new IdentityAccount(
+        IdentityAccount account = identityAccountFactory.restore(
                 1L,
                 "tester",
                 passwordHasher.encode(new RawPassword("123456")),
@@ -91,7 +95,7 @@ class UpdatePasswordUseCaseImplTest {
         when(identityAccountRepository.findByUsername("tester")).thenReturn(account);
 
         assertThatThrownBy(() -> updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
-                new CurrentOperator(1L, "tester", "session-1", null, null),
+                new CurrentOperator(1L, "tester", "session-1", null, null, null),
                 "wrong-password",
                 "654321"
         ))).isInstanceOf(OldPasswordIncorrectException.class);
@@ -103,6 +107,7 @@ class UpdatePasswordUseCaseImplTest {
     @EnableAutoConfiguration
     @Import({
             UpdatePasswordUseCaseImpl.class,
+            IdentityAccountFactory.class,
             BcryptPasswordHasher.class
     })
     static class TestApplication {
