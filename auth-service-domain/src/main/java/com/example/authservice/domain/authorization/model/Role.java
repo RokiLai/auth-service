@@ -3,8 +3,10 @@ package com.example.authservice.domain.authorization.model;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Getter
 public class Role {
@@ -22,15 +24,16 @@ public class Role {
         return new Role(id, code, permissionIds);
     }
 
-    public void addPermissions(List<Long> newPermissions) {
+    /**
+     * 角色授权属于角色聚合内部状态变更，调用方只表达“最新权限集合”。
+     */
+    public void authorize(Set<Long> newPermissions) {
         Objects.requireNonNull(newPermissions, "权限集合不能为空");
         this.permissionIds.clear();
-        this.permissionIds.addAll(newPermissions);
+        this.permissionIds.addAll(new LinkedHashSet<>(newPermissions));
     }
 
-    // 领域行为：添加单个权限
-    public void addPermission(Long permissionId) {
-        Objects.requireNonNull(permissionId, "权限不能为空");
-        this.permissionIds.add(permissionId);
+    public List<Long> permissionIds() {
+        return List.copyOf(permissionIds);
     }
 }

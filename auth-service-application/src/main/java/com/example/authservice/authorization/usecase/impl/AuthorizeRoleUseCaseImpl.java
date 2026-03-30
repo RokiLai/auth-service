@@ -1,31 +1,22 @@
 package com.example.authservice.authorization.usecase.impl;
 
 import com.example.authservice.authorization.usecase.AuthorizeRoleUseCase;
-import com.example.authservice.domain.authorization.model.Role;
-import com.example.authservice.domain.authorization.repository.RoleRepository;
-import com.example.authservice.exception.auth.RoleAuthorizeParamInvalidException;
+import com.example.authservice.domain.authorization.service.AuthorizationDomainService;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Set;
 
+@Service
 public class AuthorizeRoleUseCaseImpl implements AuthorizeRoleUseCase {
 
-    private final RoleRepository roleRepository;
+    private final AuthorizationDomainService authorizationDomainService;
 
-    public AuthorizeRoleUseCaseImpl(RoleRepository roleRepository) {
-        this.roleRepository = roleRepository;
+    public AuthorizeRoleUseCaseImpl(AuthorizationDomainService authorizationDomainService) {
+        this.authorizationDomainService = authorizationDomainService;
     }
 
     @Override
     public void batchAuthorize(Long roleId, Set<Long> permissionIds) {
-        if (roleId == null || permissionIds == null) {
-            throw new RoleAuthorizeParamInvalidException();
-        }
-        Role role = roleRepository.selectById(roleId);
-        if (role == null) {
-            return;
-        }
-        role.addPermissions(new ArrayList<>(permissionIds));
-        roleRepository.updateRolePermission(role);
+        authorizationDomainService.authorizeRole(roleId, permissionIds);
     }
 }

@@ -12,7 +12,7 @@ public interface RoleRepository {
      *
      * @return
      */
-    List<Role> selectAll();
+    List<Role> findAll();
 
     /**
      * 根据角色ID列表查询角色
@@ -20,7 +20,7 @@ public interface RoleRepository {
      * @param roleIds
      * @return
      */
-    List<Role> selectByIds(List<Long> roleIds);
+    List<Role> findByIds(List<Long> roleIds);
 
     /**
      * 根据角色ID查询角色
@@ -28,12 +28,12 @@ public interface RoleRepository {
      * @param roleId
      * @return
      */
-    Role selectById(Long roleId);
+    Role findById(Long roleId);
 
     /**
      * 根据id获取角色code
      */
-    List<String> selectCodeByIds(List<Long> roleIds);
+    List<String> findCodesByIds(List<Long> roleIds);
 
 
     /**
@@ -41,5 +41,5 @@ public interface RoleRepository {
      *
      * @param role 角色
      */
-    void updateRolePermission(Role role);
+    void save(Role role);
 }
