@@ -66,14 +66,13 @@ class UpdatePasswordUseCaseImplTest {
                 1L,
                 "tester",
                 passwordHasher.encode(new RawPassword("123456")),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername("tester")).thenReturn(account);
         when(identitySessionRepository.findSessionIdByAccountId(1L)).thenReturn("session-1");
 
         boolean updated = updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
-                new CurrentOperator(1L, "tester", "session-1", null, null, null),
+                new CurrentOperator(1L, "tester", "session-1", null),
                 "123456",
                 "654321"
         ));
@@ -91,13 +90,12 @@ class UpdatePasswordUseCaseImplTest {
                 1L,
                 "tester",
                 passwordHasher.encode(new RawPassword("123456")),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername("tester")).thenReturn(account);
 
         assertThatThrownBy(() -> updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
-                new CurrentOperator(1L, "tester", "session-1", null, null, null),
+                new CurrentOperator(1L, "tester", "session-1", null),
                 "wrong-password",
                 "654321"
         ))).isInstanceOf(OldPasswordIncorrectException.class);

@@ -8,9 +8,7 @@ import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
-import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
-import com.example.authservice.domain.authorization.service.AuthorizationDomainService;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
 import com.example.authservice.domain.identity.service.impl.AuthenticationDomainServiceImpl;
 import com.example.authservice.identity.usecase.AuthenticateUseCase;
@@ -92,9 +90,6 @@ class IdentityAuthFlowTest {
     private IdentityAccountRepository identityAccountRepository;
 
     @MockBean
-    private AuthorizationDomainService authorizationDomainService;
-
-    @MockBean
     private RegisterUseCase registerUseCase;
 
     @MockBean
@@ -113,8 +108,7 @@ class IdentityAuthFlowTest {
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername(username)).thenReturn(account);
 
@@ -171,8 +165,7 @@ class IdentityAuthFlowTest {
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername(username)).thenReturn(account);
 
@@ -253,8 +246,7 @@ class IdentityAuthFlowTest {
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername(username)).thenReturn(account);
 
@@ -283,8 +275,7 @@ class IdentityAuthFlowTest {
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername(username)).thenReturn(account);
 
@@ -316,8 +307,7 @@ class IdentityAuthFlowTest {
                 1L,
                 username,
                 passwordHasher.encode(new com.example.authservice.domain.identity.model.valueobject.RawPassword(password)),
-                "tester@example.com",
-                null
+                "tester@example.com"
         );
         when(identityAccountRepository.findByUsername(username)).thenReturn(account);
 

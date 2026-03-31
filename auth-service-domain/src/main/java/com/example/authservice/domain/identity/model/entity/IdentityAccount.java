@@ -7,26 +7,21 @@ import com.example.authservice.exception.auth.PasswordTooShortException;
 import io.micrometer.common.util.StringUtils;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 public class IdentityAccount {
     private final Long id;
     private final String username;
     private PasswordHash passwordHash;
     private final String email;
-    private final List<Long> roleIds;
 
     IdentityAccount(Long id,
                     String username,
                     PasswordHash passwordHash,
-                    String email,
-                    List<Long> roleIds) {
+                    String email) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
         this.email = email;
-        this.roleIds = roleIds == null ? List.of() : List.copyOf(roleIds);
     }
 
     /**

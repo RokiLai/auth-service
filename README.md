@@ -2,7 +2,7 @@
 
 [中文文档](./README.zh-CN.md)
 
-`auth-service` is an authentication and authorization service built with Spring Boot 3, Spring Cloud Alibaba, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, role authorization, and Nacos configuration debugging endpoints.
+`auth-service` is an authentication service built with Spring Boot 3, Spring Cloud Alibaba, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, and Nacos configuration debugging endpoints.
 
 ## Tech Stack
 
@@ -21,7 +21,7 @@
 - `auth-service-common`
   Shared annotations, exception definitions, and common configuration.
 - `auth-service-domain`
-  Domain layer for identity and authorization models, repository ports, and domain services.
+  Domain layer for identity models, repository ports, and domain services.
 - `auth-service-application`
   Application layer for use cases, commands, and orchestration logic.
 - `auth-service-infrastructure`
@@ -148,8 +148,7 @@ sh ./mvnw -pl auth-service-domain test
 Representative tests:
 
 - [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/IdentityAuthFlowTest.java)
-- [AuthorizationControllerTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/AuthorizationControllerTest.java)
-- [AuthorizationDomainServiceImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-domain/src/test/java/com/example/authservice/domain/authorization/service/impl/AuthorizationDomainServiceImplTest.java)
+- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/identity/usecase/UpdatePasswordUseCaseImplTest.java)
 
 ## Main Endpoints
 
@@ -202,35 +201,21 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. Authorize Role
-
-`POST /authorization/roles/authorize`
-
-```json
-{
-  "roleId": 1,
-  "permissionIds": [2, 3]
-}
-```
-
-### 6. Nacos Config Debug
+### 5. Nacos Config Debug
 
 `GET /debug/config/nacos`
 
 Returns the current application name, active profile, and a few resolved configuration values for debugging.
 
-## Authentication and Authorization Flow
+## Authentication Flow
 
 - JWT is returned after successful login
 - `JwtInterceptor` validates the token at the interface boundary
 - the current operator is injected via MVC argument resolution
-- role authorization is handled by the authorization domain service
-- session role/permission snapshots are assembled inside the authentication domain service
 
 Related entry points:
 
 - [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/IdentityController.java)
-- [AuthorizationController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/AuthorizationController.java)
 - [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/JwtInterceptor.java)
 - [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/CurrentOperatorArgumentResolver.java)
 
@@ -260,11 +245,11 @@ Allowed `type` values:
 Example:
 
 ```text
-feat: 新增角色授权接口
+feat: 新增密码修改接口
 
-  1. 新增角色授权控制器与请求模型
-  2. 引入授权命令对象并调整应用层调用
-  3. 补充授权接口鉴权与参数校验测试
+  1. 新增修改密码请求模型与控制器入口
+  2. 接入改密用例并在成功后失效当前会话
+  3. 补充密码修改的核心用例测试
 ```
 
 ## Suggested Future Additions
@@ -276,3 +261,7 @@ Useful future extensions for this README:
 - sample Nacos configuration
 - Postman / Apifox collections
 - deployment and production configuration notes
+
+For schema cleanup after removing the authorization module, see:
+
+- [drop-authorization-tables.sql](/Users/rokilai/IdeaProjects/auth-service/docs/drop-authorization-tables.sql)

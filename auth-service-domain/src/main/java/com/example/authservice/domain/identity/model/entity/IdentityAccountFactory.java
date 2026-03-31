@@ -9,8 +9,6 @@ import com.example.authservice.exception.auth.UsernameRequiredException;
 import io.micrometer.common.util.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class IdentityAccountFactory {
 
@@ -36,8 +34,7 @@ public class IdentityAccountFactory {
                 null,
                 username,
                 passwordHasher.encode(rawPassword),
-                email,
-                List.of()
+                email
         );
     }
 
@@ -48,8 +45,7 @@ public class IdentityAccountFactory {
     public IdentityAccount restore(Long id,
                                    String username,
                                    PasswordHash passwordHash,
-                                   String email,
-                                   List<Long> roleIds) {
-        return new IdentityAccount(id, username, passwordHash, email, roleIds);
+                                   String email) {
+        return new IdentityAccount(id, username, passwordHash, email);
     }
 }

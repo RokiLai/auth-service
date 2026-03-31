@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-`auth-service` 是一个基于 Spring Boot 3、Spring Cloud Alibaba、MyBatis、Redis 和 MySQL 的认证授权服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改、角色授权以及 Nacos 配置调试能力。
+`auth-service` 是一个基于 Spring Boot 3、Spring Cloud Alibaba、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Nacos 配置调试能力。
 
 ## 技术栈
 
@@ -21,7 +21,7 @@
 - `auth-service-common`
   公共配置、异常定义、注解等通用能力。
 - `auth-service-domain`
-  领域层，承载 identity 和 authorization 的核心模型、仓储端口、领域服务。
+  领域层，承载 identity 的核心模型、仓储端口、领域服务。
 - `auth-service-application`
   应用层，承接 use case、命令对象和应用上下文编排。
 - `auth-service-infrastructure`
@@ -148,8 +148,7 @@ sh ./mvnw -pl auth-service-domain test
 当前仓库里比较关键的测试包括：
 
 - [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/IdentityAuthFlowTest.java)
-- [AuthorizationControllerTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/AuthorizationControllerTest.java)
-- [AuthorizationDomainServiceImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-domain/src/test/java/com/example/authservice/domain/authorization/service/impl/AuthorizationDomainServiceImplTest.java)
+- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/identity/usecase/UpdatePasswordUseCaseImplTest.java)
 
 ## 主要接口
 
@@ -202,35 +201,21 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. 角色授权
-
-`POST /authorization/roles/authorize`
-
-```json
-{
-  "roleId": 1,
-  "permissionIds": [2, 3]
-}
-```
-
-### 6. Nacos 配置调试
+### 5. Nacos 配置调试
 
 `GET /debug/config/nacos`
 
 用于查看当前环境下解析到的应用名、激活 profile 和示例配置项。
 
-## 认证与鉴权说明
+## 认证流程说明
 
 - 登录成功后，JWT 会通过响应头返回
 - 接口层通过 `JwtInterceptor` 校验 token
 - 当前操作者会通过 MVC 参数解析注入到应用层命令对象
-- 角色授权由 authorization 领域服务承接
-- 登录态中的角色与权限快照在认证领域服务内完成装配
 
 相关入口可参考：
 
 - [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/IdentityController.java)
-- [AuthorizationController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/AuthorizationController.java)
 - [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/JwtInterceptor.java)
 - [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/CurrentOperatorArgumentResolver.java)
 
@@ -260,11 +245,11 @@ Authorization: Bearer <token>
 示例：
 
 ```text
-feat: 新增角色授权接口
+feat: 新增密码修改接口
 
-  1. 新增角色授权控制器与请求模型
-  2. 引入授权命令对象并调整应用层调用
-  3. 补充授权接口鉴权与参数校验测试
+  1. 新增修改密码请求模型与控制器入口
+  2. 接入改密用例并在成功后失效当前会话
+  3. 补充密码修改的核心用例测试
 ```
 
 ## 后续可补充内容
@@ -276,3 +261,7 @@ feat: 新增角色授权接口
 - Nacos 配置示例
 - Postman / Apifox 调试集合
 - 部署方式和生产配置约定
+
+如果要在数据库里清理历史权限表，可直接参考：
+
+- [drop-authorization-tables.sql](/Users/rokilai/IdeaProjects/auth-service/docs/drop-authorization-tables.sql)

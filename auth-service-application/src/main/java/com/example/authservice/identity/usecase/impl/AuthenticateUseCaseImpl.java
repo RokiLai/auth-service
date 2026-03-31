@@ -42,9 +42,7 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
                     session.getAccountId(),
                     session.getUsername(),
                     session.getSessionId(),
-                    session.getToken(),
-                    session.getRoles(),
-                    session.getPermissions()
+                    session.getToken()
             );
         } catch (JwtException e) {
             throw new TokenInvalidException();

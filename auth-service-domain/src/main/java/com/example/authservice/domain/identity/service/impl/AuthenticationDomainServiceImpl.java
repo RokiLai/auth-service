@@ -1,11 +1,9 @@
 package com.example.authservice.domain.identity.service.impl;
 
-import com.example.authservice.domain.authorization.service.AuthorizationDomainService;
 import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentitySessionFactory;
 import com.example.authservice.domain.identity.model.entity.IdentitySession;
 import com.example.authservice.domain.identity.model.context.AuthenticatedIdentity;
-import com.example.authservice.domain.identity.model.valueobject.AuthorizationSnapshot;
 import com.example.authservice.domain.identity.model.valueobject.RawPassword;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
 import com.example.authservice.domain.identity.repository.IdentitySessionRepository;
@@ -14,7 +12,6 @@ import com.example.authservice.domain.identity.service.IdentityTokenProvider;
 import com.example.authservice.domain.identity.service.PasswordHasher;
 import com.example.authservice.exception.auth.AuthenticationFailedException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.util.UUID;
 
@@ -26,20 +23,17 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
     private final IdentityTokenProvider identityTokenProvider;
     private final PasswordHasher passwordHasher;
     private final IdentitySessionFactory identitySessionFactory;
-    private final AuthorizationDomainService authorizationDomainService;
 
     public AuthenticationDomainServiceImpl(IdentityAccountRepository identityAccountRepository,
                                            IdentitySessionRepository identitySessionRepository,
                                            IdentityTokenProvider identityTokenProvider,
                                            PasswordHasher passwordHasher,
-                                           IdentitySessionFactory identitySessionFactory,
-                                           AuthorizationDomainService authorizationDomainService) {
+                                           IdentitySessionFactory identitySessionFactory) {
         this.identityAccountRepository = identityAccountRepository;
         this.identitySessionRepository = identitySessionRepository;
         this.identityTokenProvider = identityTokenProvider;
         this.passwordHasher = passwordHasher;
         this.identitySessionFactory = identitySessionFactory;
-        this.authorizationDomainService = authorizationDomainService;
     }
 
     @Override
@@ -61,15 +55,6 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
         String sessionId = UUID.randomUUID().toString();
         String token = identityTokenProvider.issue(account.getId(), username, sessionId);
         IdentitySession session = identitySessionFactory.createFor(account, sessionId, token);
-
-        // 授权快照属于登录成功后附着到会话上的领域规则，不应由应用层回填。
-        // Attaching the authorization snapshot to the session is part of the login domain rule, not application-layer orchestration.
-        if (!CollectionUtils.isEmpty(account.getRoleIds())) {
-            // identity 领域只声明“我需要授权快照”，具体组装留给 authorization 领域处理。
-            // The identity domain only declares that it needs an authorization snapshot; the authorization domain assembles it.
-            AuthorizationSnapshot snapshot = authorizationDomainService.buildSnapshot(account.getRoleIds());
-            session.grantAuthorities(snapshot.roles(), snapshot.permissions());
-        }
 
         return new AuthenticatedIdentity(account, session);
     }

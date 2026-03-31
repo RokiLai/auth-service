@@ -2,8 +2,6 @@ package com.example.authservice.domain.identity.model.entity;
 
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class IdentitySessionFactory {
 
@@ -12,7 +10,7 @@ public class IdentitySessionFactory {
      * Creates a new login session for an authenticated account so session creation stays behind a dedicated domain factory.
      */
     public IdentitySession createFor(IdentityAccount account, String sessionId, String token) {
-        return new IdentitySession(sessionId, account.getId(), account.getUsername(), token, List.of(), List.of());
+        return new IdentitySession(sessionId, account.getId(), account.getUsername(), token);
     }
 
     /**
@@ -22,9 +20,7 @@ public class IdentitySessionFactory {
     public IdentitySession restore(String sessionId,
                                    Long accountId,
                                    String username,
-                                   String token,
-                                   List<String> roles,
-                                   List<String> permissions) {
-        return new IdentitySession(sessionId, accountId, username, token, roles, permissions);
+                                   String token) {
+        return new IdentitySession(sessionId, accountId, username, token);
     }
 }

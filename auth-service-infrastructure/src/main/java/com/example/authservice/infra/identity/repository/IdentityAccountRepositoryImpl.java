@@ -4,27 +4,19 @@ import com.example.authservice.domain.identity.model.entity.IdentityAccount;
 import com.example.authservice.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authservice.domain.identity.model.valueobject.PasswordHash;
 import com.example.authservice.domain.identity.repository.IdentityAccountRepository;
-import com.example.authservice.infra.authorization.mapper.AccountRoleMapper;
-import com.example.authservice.infra.authorization.po.AccountRolePO;
 import com.example.authservice.infra.identity.mapper.AccountMapper;
 import com.example.authservice.infra.identity.po.AccountPO;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
-
-import java.util.List;
 
 @Repository
 public class IdentityAccountRepositoryImpl implements IdentityAccountRepository {
 
     private final AccountMapper accountMapper;
-    private final AccountRoleMapper accountRoleMapper;
     private final IdentityAccountFactory identityAccountFactory;
 
     public IdentityAccountRepositoryImpl(AccountMapper accountMapper,
-                                         AccountRoleMapper accountRoleMapper,
                                          IdentityAccountFactory identityAccountFactory) {
         this.accountMapper = accountMapper;
-        this.accountRoleMapper = accountRoleMapper;
         this.identityAccountFactory = identityAccountFactory;
     }
 
@@ -34,13 +26,11 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
         if (account == null) {
             return null;
         }
-        List<AccountRolePO> accountRolePOS = accountRoleMapper.selectByAccountId(account.getId());
         return identityAccountFactory.restore(
                 account.getId(),
                 account.getUsername(),
                 new PasswordHash(account.getPassword()),
-                account.getEmail(),
-                CollectionUtils.isEmpty(accountRolePOS) ? null : accountRolePOS.stream().map(AccountRolePO::getRoleId).toList()
+                account.getEmail()
         );
     }
 

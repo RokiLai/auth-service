@@ -36,7 +36,7 @@ class RedisSessionStoreImplTest {
     void saveAndBindUserSessionShouldUseExpectedRedisKeysAndJwtTtl() {
         when(jwtProperties.getExpire()).thenReturn(3_600_000L);
 
-        IdentitySession session = identitySessionFactory.restore("sid-123", 42L, null, null, null, null);
+        IdentitySession session = identitySessionFactory.restore("sid-123", 42L, null, null);
 
         sessionStore.save(session);
 
@@ -57,7 +57,7 @@ class RedisSessionStoreImplTest {
 
     @Test
     void findByAccountIdShouldResolveSessionIdFromUserBinding() {
-        IdentitySession session = identitySessionFactory.restore("sid-123", null, null, null, null, null);
+        IdentitySession session = identitySessionFactory.restore("sid-123", null, null, null);
         when(redisUtil.get("login:user_session:42")).thenReturn("sid-123");
         when(redisUtil.get("login:session:sid-123")).thenReturn(session);
 
