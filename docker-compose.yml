@@ -1,61 +1,38 @@
 services:
-  mysql:
-    image: mysql:8.2
-    container_name: mysql-container
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: auth_center
-      MYSQL_USER: roki
-      MYSQL_PASSWORD: 123456
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - auth-net
-
-  redis:
-    image: redis:7.2
-    container_name: redis-container
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - auth-net
-
   auth-center-bootstrap:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: auth-center-bootstrap-container
-    depends_on:
-      - mysql
-      - redis
+    restart: always
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: test
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      MYSQL_DATABASE: auth
+      MYSQL_USERNAME: ${MYSQL_USERNAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE:-3600000}
+      NACOS_SERVER_ADDR: ${NACOS_SERVER_ADDR:-}
+      NACOS_USERNAME: ${NACOS_USERNAME:-}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-}
+      NACOS_GROUP: ${NACOS_GROUP:-DEFAULT_GROUP}
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - auth-net
-
-  auth-web:
-    build:
-      context: ../../vue-auth-center
-      dockerfile: Dockerfile
-    container_name: auth-web-container
-    ports:
-      - "80:80"
-    depends_on:
-      - auth-center-bootstrap
-    networks:
-      - auth-net
-
-volumes:
-  mysql-data:
-  redis-data:
 
 networks:
   auth-net:

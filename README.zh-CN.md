@@ -130,6 +130,33 @@ sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=t
 
 - [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
 
+## Docker 部署
+
+如果要在另一台电脑上通过 Docker 启动后端，建议使用仓库内的 `docker` profile。该 profile 会：
+
+- 关闭 Nacos 配置和服务注册
+- 关闭 Dubbo
+- 通过环境变量连接外部已有的 MySQL 和 Redis
+- 使用容器内 `8080` 端口
+
+部署步骤：
+
+```bash
+sh ./mvnw -pl auth-center-bootstrap -am clean package -DskipTests
+export MYSQL_HOST=你的数据库地址
+export MYSQL_USERNAME=你的数据库用户名
+export MYSQL_PASSWORD=你的数据库密码
+export REDIS_HOST=你的Redis地址
+export JWT_SECRET=你的JWT密钥
+docker compose up -d --build
+```
+
+说明：
+
+- 构建镜像前需要先打包出 `auth-center-bootstrap/target/auth-center-bootstrap-1.0-SNAPSHOT.jar`
+- 当前 `docker-compose.yml` 只部署后端服务，不再包含前端、MySQL、Redis 等容器
+- `MYSQL_PORT`、`REDIS_PORT`、`REDIS_PASSWORD`、`JWT_EXPIRE` 也支持通过环境变量覆盖
+
 ## 测试
 
 运行全量测试：
