@@ -1,0 +1,9 @@
+# debug: true
+
+roki:
+  exception:
+    error-code:
+      project-code: "10"
+      default-biz-code: "01"
+      biz-codes:
+        auth: "01"

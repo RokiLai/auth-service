@@ -2,7 +2,7 @@
 
 ## 目标
 
-结合当前项目的 `@AuthIdentity CurrentIdentity` 参数注入场景，梳理 Spring MVC 在源码层面是如何完成以下动作的：
+结合当前项目的 `@AuthIdentity CurrentOperator` 参数注入场景，梳理 Spring MVC 在源码层面是如何完成以下动作的：
 
 - 初始化参数解析器链
 - 选择某个参数对应的 resolver
@@ -84,7 +84,7 @@ resolvers.add(new ServletModelAttributeMethodProcessor(true));
 2. 你通过 `WebMvcConfigurer#addArgumentResolvers(...)` 加进去的 resolver，会被放进 `customArgumentResolvers`
 3. custom resolver 在大多数内置 resolver 后面、在 catch-all resolver 前面
 
-对你这个项目来说，`CurrentIdentityArgumentResolver` 就是按这个规则进链的。
+对你这个项目来说，`CurrentOperatorArgumentResolver` 就是按这个规则进链的。
 
 ### 3. 真正开始调用 controller 前
 
@@ -268,19 +268,19 @@ return resolver.resolveArgument(parameter, mavContainer, webRequest, binderFacto
 “既然归我负责，那具体值怎么拿？”
 ```
 
-你的 `CurrentIdentityArgumentResolver` 就是这个模型：
+你的 `CurrentOperatorArgumentResolver` 就是这个模型：
 
 ```java
 public boolean supportsParameter(MethodParameter parameter) {
     return parameter.hasParameterAnnotation(AuthIdentity.class)
-            && CurrentIdentity.class.isAssignableFrom(parameter.getParameterType());
+            && CurrentOperator.class.isAssignableFrom(parameter.getParameterType());
 }
 ```
 
 先精准命中：
 
 - 参数上必须有 `@AuthIdentity`
-- 参数类型必须是 `CurrentIdentity`
+- 参数类型必须是 `CurrentOperator`
 
 然后再在 `resolveArgument(...)` 里从 request attribute 中取值。
 
@@ -289,7 +289,7 @@ public boolean supportsParameter(MethodParameter parameter) {
 假设 controller 方法是：
 
 ```java
-public Result<Boolean> logout(@AuthIdentity CurrentIdentity currentIdentity)
+public Result<Boolean> logout(@AuthIdentity CurrentOperator currentOperator)
 ```
 
 那么 Spring MVC 实际会这样跑：
@@ -303,13 +303,13 @@ RequestMappingHandlerAdapter.invokeHandlerMethod(...)
       -> Composite.supportsParameter(parameter)
         -> getArgumentResolver(parameter)
           -> 遍历所有 resolver
-          -> CurrentIdentityArgumentResolver.supportsParameter(parameter) == true
+          -> CurrentOperatorArgumentResolver.supportsParameter(parameter) == true
       -> Composite.resolveArgument(parameter, ...)
         -> getArgumentResolver(parameter)
-        -> CurrentIdentityArgumentResolver.resolveArgument(...)
-          -> request.getAttribute("currentIdentity")
+        -> CurrentOperatorArgumentResolver.resolveArgument(...)
+          -> request.getAttribute("currentOperator")
     -> doInvoke(args)
-      -> controller.logout(currentIdentity)
+      -> controller.logout(currentOperator)
 ```
 
 这里最重要的是：
