@@ -26,6 +26,10 @@ spring:
       password: ${REDIS_PASSWORD:}
       timeout: 5000
 
+app:
+  backend-discovery:
+    enabled: false
+
 grpc:
   server:
     enabled: true

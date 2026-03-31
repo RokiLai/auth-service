@@ -32,6 +32,16 @@ spring:
         metadata:
           grpc-port: ${grpc.server.port}
 
+app:
+  backend-discovery:
+    enabled: true
+    mysql:
+      service-name: ${MYSQL_SERVICE_NAME:mysql-proxy-service}
+      database: ${MYSQL_DATABASE:auth}
+      jdbc-params: ${MYSQL_JDBC_PARAMS:useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false}
+    redis:
+      service-name: ${REDIS_SERVICE_NAME:redis-proxy-service}
+
 grpc:
   server:
     enabled: true

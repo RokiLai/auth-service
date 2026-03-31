@@ -24,6 +24,10 @@ jwt:
   secret: your-256-bit-secret-your-256-bit-secret
   expire: 3600000
 
+app:
+  backend-discovery:
+    enabled: false
+
 grpc:
   server:
     enabled: false
