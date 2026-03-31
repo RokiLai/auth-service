@@ -1,8 +1,8 @@
-# auth-service
+# auth-center
 
 [中文文档](./README.zh-CN.md)
 
-`auth-service` is an authentication service built with Spring Boot 3, Spring Cloud Alibaba, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, and Nacos configuration debugging endpoints.
+`auth-center` is an authentication service built with Spring Boot 3, Spring Cloud Alibaba, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, and Nacos configuration debugging endpoints.
 
 ## Tech Stack
 
@@ -18,17 +18,17 @@
 
 ## Modules
 
-- `auth-service-common`
+- `auth-center-common`
   Shared annotations, exception definitions, and common configuration.
-- `auth-service-domain`
+- `auth-center-domain`
   Domain layer for identity models, repository ports, and domain services.
-- `auth-service-application`
+- `auth-center-application`
   Application layer for use cases, commands, and orchestration logic.
-- `auth-service-infrastructure`
+- `auth-center-infrastructure`
   Infrastructure adapters for MyBatis, Redis, JWT, and repository implementations.
-- `auth-service-interfaces`
+- `auth-center-interfaces`
   Interface layer for HTTP controllers and request/response models.
-- `auth-service-bootstrap`
+- `auth-center-bootstrap`
   Runtime bootstrap layer for Spring Boot startup, MVC config, interceptors, and environment wiring.
 
 ## Layering Rules
@@ -59,8 +59,8 @@ Current `dev` and `test` profiles default to:
 
 If your local environment is different, update:
 
-- [application-dev.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application-dev.yml)
-- [application-test.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application-test.yml)
+- [application-dev.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-dev.yml)
+- [application-test.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-test.yml)
 
 ## GitHub Packages Dependency
 
@@ -86,19 +86,19 @@ The `server` id must be `github`, because the root [pom.xml](/Users/rokilai/Idea
 
 The default active profile is `dev`, defined in:
 
-- [application.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application.yml)
+- [application.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application.yml)
 
 The `dev` profile:
 
-- imports `auth-service.yml` from Nacos
-- imports `auth-service-dev.yml` from Nacos
+- imports `auth-center.yml` from Nacos
+- imports `auth-center-dev.yml` from Nacos
 - registers the service into Nacos
 - connects to MySQL and Redis
 
 The `test` profile imports:
 
-- `auth-service.yml`
-- `auth-service-test.yml`
+- `auth-center.yml`
+- `auth-center-test.yml`
 
 Some Nacos properties support environment variable overrides:
 
@@ -113,13 +113,13 @@ Some Nacos properties support environment variable overrides:
 Start with Maven Wrapper:
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap clean spring-boot:run
 ```
 
 Start with an explicit profile:
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap spring-boot:run -Dspring-boot.run.profiles=test
+sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=test
 ```
 
 Default port:
@@ -128,7 +128,7 @@ Default port:
 
 Main class:
 
-- [AuthServiceApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/AuthServiceApplication.java)
+- [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
 
 ## Test
 
@@ -141,14 +141,14 @@ sh ./mvnw test
 Run selected modules:
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap test
-sh ./mvnw -pl auth-service-domain test
+sh ./mvnw -pl auth-center-bootstrap test
+sh ./mvnw -pl auth-center-domain test
 ```
 
 Representative tests:
 
-- [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/IdentityAuthFlowTest.java)
-- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/identity/usecase/UpdatePasswordUseCaseImplTest.java)
+- [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/controller/IdentityAuthFlowTest.java)
+- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/identity/usecase/UpdatePasswordUseCaseImplTest.java)
 
 ## Main Endpoints
 
@@ -215,9 +215,9 @@ Returns the current application name, active profile, and a few resolved configu
 
 Related entry points:
 
-- [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/IdentityController.java)
-- [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/JwtInterceptor.java)
-- [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/CurrentOperatorArgumentResolver.java)
+- [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java)
+- [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java)
+- [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java)
 
 ## CI Conventions
 

@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: auth_service
+      MYSQL_DATABASE: auth_center
       MYSQL_USER: roki
       MYSQL_PASSWORD: 123456
     ports:
@@ -26,11 +26,11 @@ services:
     networks:
       - auth-net
 
-  auth-service-bootstrap:
+  auth-center-bootstrap:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: auth-service-bootstrap-container
+    container_name: auth-center-bootstrap-container
     depends_on:
       - mysql
       - redis
@@ -43,13 +43,13 @@ services:
 
   auth-web:
     build:
-      context: ../../vue-auth-service
+      context: ../../vue-auth-center
       dockerfile: Dockerfile
     container_name: auth-web-container
     ports:
       - "80:80"
     depends_on:
-      - auth-service-bootstrap
+      - auth-center-bootstrap
     networks:
       - auth-net
 

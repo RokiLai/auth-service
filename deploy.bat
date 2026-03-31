@@ -16,21 +16,21 @@ if errorlevel 1 (
 )
 
 echo ===========================
-echo 2. 停止并移除 auth-service-bootstrap 容器（如果存在）
-REM 尝试停止 auth-service-bootstrap 容器，如果容器不存在或已停止，则忽略错误
-call docker stop auth-service-bootstrap-container >NUL 2>&1
-REM 尝试移除 auth-service-bootstrap 容器，如果容器不存在，则忽略错误
-call docker rm auth-service-bootstrap-container >NUL 2>&1
+echo 2. 停止并移除 auth-center-bootstrap 容器（如果存在）
+REM 尝试停止 auth-center-bootstrap 容器，如果容器不存在或已停止，则忽略错误
+call docker stop auth-center-bootstrap-container >NUL 2>&1
+REM 尝试移除 auth-center-bootstrap 容器，如果容器不存在，则忽略错误
+call docker rm auth-center-bootstrap-container >NUL 2>&1
 
 echo ===========================
-echo 3. 重新构建 auth-service-bootstrap 镜像并启动 auth-service-bootstrap 服务
-REM --build 确保构建最新的 auth-service-bootstrap 镜像
+echo 3. 重新构建 auth-center-bootstrap 镜像并启动 auth-center-bootstrap 服务
+REM --build 确保构建最新的 auth-center-bootstrap 镜像
 REM -d 后台运行
-REM auth-service-bootstrap 指定只操作 auth-service-bootstrap 服务
-call docker compose up -d --build auth-service-bootstrap
+REM auth-center-bootstrap 指定只操作 auth-center-bootstrap 服务
+call docker compose up -d --build auth-center-bootstrap
 
 if errorlevel 1 (
-    echo Docker Compose 启动 auth-service-bootstrap 失败，终止部署！
+    echo Docker Compose 启动 auth-center-bootstrap 失败，终止部署！
     pause
     exit /b 1
 )

@@ -1,8 +1,8 @@
-# auth-service
+# auth-center
 
 [English](./README.md)
 
-`auth-service` 是一个基于 Spring Boot 3、Spring Cloud Alibaba、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Nacos 配置调试能力。
+`auth-center` 是一个基于 Spring Boot 3、Spring Cloud Alibaba、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Nacos 配置调试能力。
 
 ## 技术栈
 
@@ -18,17 +18,17 @@
 
 ## 模块结构
 
-- `auth-service-common`
+- `auth-center-common`
   公共配置、异常定义、注解等通用能力。
-- `auth-service-domain`
+- `auth-center-domain`
   领域层，承载 identity 的核心模型、仓储端口、领域服务。
-- `auth-service-application`
+- `auth-center-application`
   应用层，承接 use case、命令对象和应用上下文编排。
-- `auth-service-infrastructure`
+- `auth-center-infrastructure`
   基础设施层，提供 MyBatis Mapper、Redis、JWT、仓储实现等技术适配。
-- `auth-service-interfaces`
+- `auth-center-interfaces`
   接口层，提供 HTTP Controller、请求响应模型。
-- `auth-service-bootstrap`
+- `auth-center-bootstrap`
   启动层，负责 Spring Boot 应用装配、MVC 配置、拦截器、环境配置。
 
 ## 分层约定
@@ -59,8 +59,8 @@
 
 如果你的本地环境不同，需要修改：
 
-- [application-dev.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application-dev.yml)
-- [application-test.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application-test.yml)
+- [application-dev.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-dev.yml)
+- [application-test.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-test.yml)
 
 ## GitHub Packages 依赖
 
@@ -86,19 +86,19 @@
 
 默认激活环境是 `dev`，定义在：
 
-- [application.yml](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/resources/application.yml)
+- [application.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application.yml)
 
 `dev` 环境会：
 
-- 从 Nacos 加载 `auth-service.yml`
-- 从 Nacos 加载 `auth-service-dev.yml`
+- 从 Nacos 加载 `auth-center.yml`
+- 从 Nacos 加载 `auth-center-dev.yml`
 - 注册服务到 Nacos
 - 连接 MySQL 和 Redis
 
 `test` 环境会加载：
 
-- `auth-service.yml`
-- `auth-service-test.yml`
+- `auth-center.yml`
+- `auth-center-test.yml`
 
 其中部分 Nacos 参数支持环境变量覆盖：
 
@@ -113,13 +113,13 @@
 使用 Maven Wrapper：
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap clean spring-boot:run
 ```
 
 如果要显式指定环境：
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap spring-boot:run -Dspring-boot.run.profiles=test
+sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=test
 ```
 
 默认端口：
@@ -128,7 +128,7 @@ sh ./mvnw -pl auth-service-bootstrap spring-boot:run -Dspring-boot.run.profiles=
 
 启动类：
 
-- [AuthServiceApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/AuthServiceApplication.java)
+- [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
 
 ## 测试
 
@@ -141,14 +141,14 @@ sh ./mvnw test
 运行指定模块测试：
 
 ```bash
-sh ./mvnw -pl auth-service-bootstrap test
-sh ./mvnw -pl auth-service-domain test
+sh ./mvnw -pl auth-center-bootstrap test
+sh ./mvnw -pl auth-center-domain test
 ```
 
 当前仓库里比较关键的测试包括：
 
-- [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/controller/IdentityAuthFlowTest.java)
-- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/test/java/com/example/authservice/identity/usecase/UpdatePasswordUseCaseImplTest.java)
+- [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/controller/IdentityAuthFlowTest.java)
+- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/identity/usecase/UpdatePasswordUseCaseImplTest.java)
 
 ## 主要接口
 
@@ -215,9 +215,9 @@ Authorization: Bearer <token>
 
 相关入口可参考：
 
-- [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-interfaces/src/main/java/com/example/authservice/controller/IdentityController.java)
-- [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/JwtInterceptor.java)
-- [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-service-bootstrap/src/main/java/com/example/authservice/config/CurrentOperatorArgumentResolver.java)
+- [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java)
+- [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java)
+- [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java)
 
 ## CI 约定
 

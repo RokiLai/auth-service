@@ -28,13 +28,13 @@ flowchart TD
     M --> N{"session 存在<br/>且 token 匹配"}
 
     N -- 否 --> O["抛出 TokenInvalidException<br/>或 TokenExpiredException"]
-    N -- 是 --> P["组装 CurrentIdentity"]
-    P --> Q["request.setAttribute('currentIdentity', currentIdentity)"]
+    N -- 是 --> P["组装 CurrentOperator"]
+    P --> Q["request.setAttribute('currentOperator', currentOperator)"]
 
     Q --> R["InvocableHandlerMethod.getMethodArgumentValues(...)"]
-    R --> S["CurrentIdentityArgumentResolver.supportsParameter(...)"]
-    S --> T["CurrentIdentityArgumentResolver.resolveArgument(...)"]
-    T --> U["request.getAttribute('currentIdentity')"]
+    R --> S["CurrentOperatorArgumentResolver.supportsParameter(...)"]
+    S --> T["CurrentOperatorArgumentResolver.resolveArgument(...)"]
+    T --> U["request.getAttribute('currentOperator')"]
     U --> V["Controller 方法执行"]
 ```
 
@@ -48,7 +48,7 @@ sequenceDiagram
     participant UseCase as AuthenticateUseCaseImpl
     participant TokenProvider as IdentityTokenProvider
     participant SessionRepo as IdentitySessionRepository
-    participant Resolver as CurrentIdentityArgumentResolver
+    participant Resolver as CurrentOperatorArgumentResolver
     participant Controller as Controller
 
     Client->>MVC: doDispatch(request, response)
@@ -71,9 +71,9 @@ sequenceDiagram
             UseCase->>SessionRepo: findBySessionId(sessionId)
             SessionRepo-->>UseCase: IdentitySession
             UseCase->>UseCase: session.matchesToken(rawToken)
-            UseCase->>UseCase: new CurrentIdentity(...)
-            UseCase-->>Interceptor: CurrentIdentity
-            Interceptor->>Interceptor: request.setAttribute("currentIdentity", currentIdentity)
+            UseCase->>UseCase: new CurrentOperator(...)
+            UseCase-->>Interceptor: CurrentOperator
+            Interceptor->>Interceptor: request.setAttribute("currentOperator", currentOperator)
             Interceptor-->>MVC: true
         end
     end
@@ -83,8 +83,8 @@ sequenceDiagram
     MVC->>Resolver: resolveArgument(parameter, mavContainer, webRequest, binderFactory)
     Resolver->>Resolver: webRequest.getNativeRequest(HttpServletRequest.class)
     Resolver->>Resolver: request.getAttribute("currentIdentity")
-    Resolver-->>MVC: CurrentIdentity
-    MVC->>Controller: logout(currentIdentity) / updatePassword(request, currentIdentity)
+    Resolver-->>MVC: CurrentOperator
+    MVC->>Controller: logout(currentOperator) / updatePassword(request, currentOperator)
 ```
 
 ## 方法调用清单
@@ -104,15 +104,15 @@ DispatcherServlet.doDispatch(...)
         -> TokenClaims.getSessionId()
         -> IdentitySessionRepository.findBySessionId(sessionId)
         -> IdentitySession.matchesToken(rawToken)
-        -> new CurrentIdentity(...)
-      -> request.setAttribute("currentIdentity", currentIdentity)
+        -> new CurrentOperator(...)
+      -> request.setAttribute("currentOperator", currentOperator)
   -> InvocableHandlerMethod.getMethodArgumentValues(...)
-    -> CurrentIdentityArgumentResolver.supportsParameter(parameter)
-    -> CurrentIdentityArgumentResolver.resolveArgument(...)
+    -> CurrentOperatorArgumentResolver.supportsParameter(parameter)
+    -> CurrentOperatorArgumentResolver.resolveArgument(...)
       -> webRequest.getNativeRequest(HttpServletRequest.class)
-      -> request.getAttribute("currentIdentity")
-  -> Controller.logout(@AuthIdentity CurrentIdentity)
-     或 Controller.updatePassword(..., @AuthIdentity CurrentIdentity)
+      -> request.getAttribute("currentOperator")
+  -> Controller.logout(@AuthIdentity CurrentOperator)
+     或 Controller.updatePassword(..., @AuthIdentity CurrentOperator)
 ```
 
 ## Controller 层看到的形态
@@ -121,22 +121,20 @@ DispatcherServlet.doDispatch(...)
 
 ```java
 @PostMapping("/logout")
-public Result<Boolean> logout(@AuthIdentity CurrentIdentity currentIdentity) {
-    return Result.success(logoutUseCase.logout(currentIdentity.getId(), currentIdentity.getSessionId()));
+public Result<Boolean> logout(@AuthIdentity CurrentOperator currentOperator) {
+    return Result.success(logoutUseCase.logout(new LogoutCommand(currentOperator)));
 }
 ```
 
 ```java
 @PostMapping("/update-password")
 public Result<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
-                                      @AuthIdentity CurrentIdentity currentIdentity) {
-    accountService.updatePassword(
-            currentIdentity.getUsername(),
-            currentIdentity.getId(),
-            currentIdentity.getSessionId(),
+                                      @AuthIdentity CurrentOperator currentOperator) {
+    updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
+            currentOperator,
             request.getOldPassword(),
             request.getNewPassword()
-    );
+    ));
     return Result.success(true);
 }
 ```
@@ -144,19 +142,18 @@ public Result<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest 
 ## 当前项目代码映射
 
 - 拦截入口
-  - `auth-service-bootstrap/src/main/java/com/example/authservice/config/JwtInterceptor.java`
+  - `auth-center-bootstrap/src/main/java/com/example/authcenter/config/JwtInterceptor.java`
 - 鉴权用例
-  - `auth-service-application/src/main/java/com/example/authservice/identity/usecase/impl/AuthenticateUseCaseImpl.java`
+  - `auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/AuthenticateUseCaseImpl.java`
 - 会话仓储
-  - `auth-service-domain/src/main/java/com/example/authservice/domain/identity/repository/IdentitySessionRepository.java`
-  - `auth-service-infrastructure/src/main/java/com/example/authservice/infra/service/RedisSessionStoreImpl.java`
+  - `auth-center-domain/src/main/java/com/example/authcenter/domain/identity/repository/IdentitySessionRepository.java`
+  - `auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java`
 - 当前身份参数解析器
-  - `auth-service-bootstrap/src/main/java/com/example/authservice/config/CurrentIdentityArgumentResolver.java`
+  - `auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java`
 - MVC 注册
-  - `auth-service-bootstrap/src/main/java/com/example/authservice/config/WebConfig.java`
+  - `auth-center-bootstrap/src/main/java/com/example/authcenter/config/WebConfig.java`
 - controller 身份注入点
-  - `auth-service-interfaces/src/main/java/com/example/authservice/controller/IdentityController.java`
-  - `auth-service-interfaces/src/main/java/com/example/authservice/controller/AccountController.java`
+  - `auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java`
 
 ## 分层职责
 

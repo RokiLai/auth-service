@@ -12,19 +12,19 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>auth-service</artifactId>
+    <artifactId>auth-center</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>auth-service</name>
-    <description>auth-service layered modules</description>
+    <name>auth-center</name>
+    <description>auth-center layered modules</description>
 
     <modules>
-        <module>auth-service-common</module>
-        <module>auth-service-domain</module>
-        <module>auth-service-application</module>
-        <module>auth-service-infrastructure</module>
-        <module>auth-service-interfaces</module>
-        <module>auth-service-bootstrap</module>
+        <module>auth-center-common</module>
+        <module>auth-center-domain</module>
+        <module>auth-center-application</module>
+        <module>auth-center-infrastructure</module>
+        <module>auth-center-interfaces</module>
+        <module>auth-center-bootstrap</module>
     </modules>
 
     <properties>
@@ -81,32 +81,32 @@
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-common</artifactId>
+                <artifactId>auth-center-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-domain</artifactId>
+                <artifactId>auth-center-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-application</artifactId>
+                <artifactId>auth-center-application</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-infrastructure</artifactId>
+                <artifactId>auth-center-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-interfaces</artifactId>
+                <artifactId>auth-center-interfaces</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>auth-service-bootstrap</artifactId>
+                <artifactId>auth-center-bootstrap</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

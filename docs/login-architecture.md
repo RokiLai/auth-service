@@ -69,21 +69,21 @@ sequenceDiagram
 
 ### 现有模块
 
-- `auth-service-interfaces`
+- `auth-center-interfaces`
   - 当前入口：`IdentityController`
-- `auth-service-application`
+- `auth-center-application`
   - 当前用例：`LoginUseCase`、`LogoutUseCase`、`RegisterUseCase`、`UpdatePasswordUseCase`、`AuthenticateUseCase`
-- `auth-service-domain`
+- `auth-center-domain`
   - 当前模型：`IdentityAccount`、`IdentitySession`
   - 当前端口：`IdentityAccountRepository`、`IdentitySessionRepository`、`IdentityTokenProvider`、`PasswordHasher`
-- `auth-service-infrastructure`
+- `auth-center-infrastructure`
   - 当前仓储实现：`IdentityAccountRepositoryImpl`、`RedisSessionStoreImpl`
   - 当前适配实现：`JwtIdentityTokenProvider`、`BcryptPasswordHasher`
   - 当前持久化：MyBatis Mapper + XML、Redis
-- `auth-service-common`
+- `auth-center-common`
   - 当前共享能力：`JwtUtil`、`JwtProperties`、`PassToken`
-- `auth-service-bootstrap`
-  - 当前运行配置：`AuthServiceApplication`、`JwtInterceptor`、`WebConfig`
+- `auth-center-bootstrap`
+  - 当前运行配置：`AuthCenterApplication`、`JwtInterceptor`、`WebConfig`
 
 ## 面向当前项目的目标登录架构
 
