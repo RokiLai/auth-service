@@ -13,19 +13,19 @@ import java.util.Map;
 @RefreshScope
 @RestController
 @RequestMapping("/debug/config")
-public class NacosConfigDebugController {
+public class ConsulConfigDebugController {
 
     private final Environment environment;
 
     @Value("${demo.message:local-default}")
     private String demoMessage;
 
-    public NacosConfigDebugController(Environment environment) {
+    public ConsulConfigDebugController(Environment environment) {
         this.environment = environment;
     }
 
-    @GetMapping("/nacos")
-    public Map<String, Object> nacos() {
+    @GetMapping("/consul")
+    public Map<String, Object> consul() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("applicationName", environment.getProperty("spring.application.name"));
         payload.put("activeProfile", environment.getProperty("spring.profiles.active"));

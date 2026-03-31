@@ -2,18 +2,18 @@
 
 [中文文档](./README.zh-CN.md)
 
-`auth-center` is an authentication service built with Spring Boot 3, Spring Cloud Alibaba, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, and Nacos configuration debugging endpoints.
+`auth-center` is an authentication service built with Spring Boot 3, Spring Cloud, MyBatis, Redis, and MySQL. The project is organized as a modular layered application and currently provides identity authentication, session management, password updates, and Consul configuration debugging endpoints.
 
 ## Tech Stack
 
 - Java 17
 - Spring Boot 3.5.12
 - Spring Cloud 2025.0.0
-- Spring Cloud Alibaba 2025.0.0.0
 - MyBatis Spring Boot Starter 3.0.3
 - MySQL 8
 - Redis
-- Nacos Config / Nacos Discovery
+- Consul Config / Consul Discovery
+- gRPC Java
 - JJWT 0.11.5
 
 ## Modules
@@ -49,11 +49,11 @@ Before running locally, prepare:
 - Maven 3.9+ or the included `./mvnw`
 - MySQL
 - Redis
-- Nacos
+- Consul
 
 Current `dev` and `test` profiles default to:
 
-- Nacos: `192.168.31.169:8848`
+- Consul: `192.168.31.169:8500`
 - MySQL: `192.168.31.169:3306/auth`
 - Redis: `192.168.31.169:6379`
 
@@ -90,9 +90,9 @@ The default active profile is `dev`, defined in:
 
 The `dev` profile:
 
-- imports `auth-center.yml` from Nacos
-- imports `auth-center-dev.yml` from Nacos
-- registers the service into Nacos
+- imports `config/application,data` from Consul
+- imports `config/auth-center,data` and `config/auth-center-dev,data` from Consul
+- registers the service into Consul
 - connects to MySQL and Redis
 
 The `test` profile imports:
@@ -100,13 +100,10 @@ The `test` profile imports:
 - `auth-center.yml`
 - `auth-center-test.yml`
 
-Some Nacos properties support environment variable overrides:
+Some Consul properties support environment variable overrides:
 
-- `NACOS_SERVER_ADDR`
-- `NACOS_USERNAME`
-- `NACOS_PASSWORD`
-- `NACOS_NAMESPACE`
-- `NACOS_GROUP`
+- `CONSUL_HOST`
+- `CONSUL_PORT`
 
 ## Run Locally
 
@@ -129,6 +126,10 @@ Default port:
 Main class:
 
 - [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
+
+gRPC default port:
+
+- `9090`
 
 ## Test
 
@@ -201,11 +202,21 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. Nacos Config Debug
+### 5. Consul Config Debug
 
-`GET /debug/config/nacos`
+`GET /debug/config/consul`
 
 Returns the current application name, active profile, and a few resolved configuration values for debugging.
+
+## gRPC
+
+The project also exposes gRPC services for internal service-to-service calls.
+
+- default port: `9090`
+- proto file: [auth_center.proto](/Users/rokilai/IdeaProjects/auth-center/auth-center-common/src/main/proto/auth_center.proto)
+- services:
+  `authcenter.v1.IdentityService`
+  `authcenter.v1.ConfigDebugService`
 
 ## Authentication Flow
 
@@ -258,7 +269,7 @@ Useful future extensions for this README:
 
 - database schema overview
 - bootstrap SQL
-- sample Nacos configuration
+- sample Consul configuration
 - Postman / Apifox collections
 - deployment and production configuration notes
 

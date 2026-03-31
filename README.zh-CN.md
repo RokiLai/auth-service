@@ -2,18 +2,18 @@
 
 [English](./README.md)
 
-`auth-center` 是一个基于 Spring Boot 3、Spring Cloud Alibaba、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Nacos 配置调试能力。
+`auth-center` 是一个基于 Spring Boot 3、Spring Cloud、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Consul 配置调试能力。
 
 ## 技术栈
 
 - Java 17
 - Spring Boot 3.5.12
 - Spring Cloud 2025.0.0
-- Spring Cloud Alibaba 2025.0.0.0
 - MyBatis Spring Boot Starter 3.0.3
 - MySQL 8
 - Redis
-- Nacos Config / Nacos Discovery
+- Consul Config / Consul Discovery
+- gRPC Java
 - JJWT 0.11.5
 
 ## 模块结构
@@ -49,11 +49,11 @@
 - Maven 3.9+ 或使用仓库自带 `./mvnw`
 - MySQL
 - Redis
-- Nacos
+- Consul
 
 当前 `dev` / `test` 配置默认使用如下地址：
 
-- Nacos: `192.168.31.169:8848`
+- Consul: `192.168.31.169:8500`
 - MySQL: `192.168.31.169:3306/auth`
 - Redis: `192.168.31.169:6379`
 
@@ -90,9 +90,9 @@
 
 `dev` 环境会：
 
-- 从 Nacos 加载 `auth-center.yml`
-- 从 Nacos 加载 `auth-center-dev.yml`
-- 注册服务到 Nacos
+- 从 Consul 加载 `config/application,data`
+- 从 Consul 加载 `config/auth-center,data` 和 `config/auth-center-dev,data`
+- 注册服务到 Consul
 - 连接 MySQL 和 Redis
 
 `test` 环境会加载：
@@ -100,13 +100,10 @@
 - `auth-center.yml`
 - `auth-center-test.yml`
 
-其中部分 Nacos 参数支持环境变量覆盖：
+其中部分 Consul 参数支持环境变量覆盖：
 
-- `NACOS_SERVER_ADDR`
-- `NACOS_USERNAME`
-- `NACOS_PASSWORD`
-- `NACOS_NAMESPACE`
-- `NACOS_GROUP`
+- `CONSUL_HOST`
+- `CONSUL_PORT`
 
 ## 本地启动
 
@@ -130,12 +127,15 @@ sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=t
 
 - [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
 
+gRPC 默认端口：
+
+- `9090`
+
 ## Docker 部署
 
 如果要在另一台电脑上通过 Docker 启动后端，建议使用仓库内的 `docker` profile。该 profile 会：
 
-- 关闭 Nacos 配置和服务注册
-- 关闭 Dubbo
+- 关闭 Consul 配置和服务注册
 - 通过环境变量连接外部已有的 MySQL 和 Redis
 - 使用容器内 `8080` 端口
 
@@ -228,11 +228,21 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. Nacos 配置调试
+### 5. Consul 配置调试
 
-`GET /debug/config/nacos`
+`GET /debug/config/consul`
 
 用于查看当前环境下解析到的应用名、激活 profile 和示例配置项。
+
+## gRPC
+
+项目同时暴露 gRPC 服务，供内部服务间调用。
+
+- 默认端口：`9090`
+- proto 文件：[auth_center.proto](/Users/rokilai/IdeaProjects/auth-center/auth-center-common/src/main/proto/auth_center.proto)
+- 服务：
+  `authcenter.v1.IdentityService`
+  `authcenter.v1.ConfigDebugService`
 
 ## 认证流程说明
 
@@ -285,7 +295,7 @@ feat: 新增密码修改接口
 
 - 数据库表结构说明
 - 初始化 SQL
-- Nacos 配置示例
+- Consul 配置示例
 - Postman / Apifox 调试集合
 - 部署方式和生产配置约定
 

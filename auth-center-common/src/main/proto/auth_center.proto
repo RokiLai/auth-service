@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package authcenter.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.authcenter.grpc";
+option java_outer_classname = "AuthCenterProto";
+
+service IdentityService {
+  rpc Register (RegisterRequest) returns (OperationReply);
+  rpc Login (LoginRequest) returns (LoginReply);
+  rpc Logout (TokenRequest) returns (OperationReply);
+  rpc UpdatePassword (UpdatePasswordRequest) returns (OperationReply);
+}
+
+service ConfigDebugService {
+  rpc GetConsulConfig (ConsulConfigRequest) returns (ConsulConfigReply);
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginReply {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+  string token = 4;
+}
+
+message TokenRequest {
+  string token = 1;
+}
+
+message UpdatePasswordRequest {
+  string token = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message OperationReply {
+  bool success = 1;
+}
+
+message ConsulConfigRequest {
+}
+
+message ConsulConfigReply {
+  string application_name = 1;
+  string active_profile = 2;
+  string demo_message = 3;
+  string sample_flag = 4;
+}

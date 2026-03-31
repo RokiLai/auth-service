@@ -5,62 +5,41 @@ server:
 
 spring:
   config:
-    import:
-      - optional:nacos:auth-center.yml?group=DEFAULT_GROUP&refreshEnabled=true
-      - optional:nacos:auth-center-dev.yml?group=DEFAULT_GROUP&refreshEnabled=true
+    import: "optional:consul:"
   application:
     name: auth-center
   cloud:
-    nacos:
+    consul:
+      host: ${CONSUL_HOST:192.168.31.169}
+      port: ${CONSUL_PORT:8500}
       config:
-        server-addr: 192.168.31.169:8848
-        username: nacos
-        password: 123456
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        file-extension: yml
-        refresh-enabled: true
+        enabled: true
+        format: YAML
+        prefixes: config
+        default-context: application
+        profile-separator: "-"
+        data-key: data
+        watch:
+          enabled: true
       discovery:
-        server-addr: 192.168.31.169:8848
-        username: nacos
-        password: 123456
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        register-enabled: true
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.31.169:3306/auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    username: root
-    password: 123456
-  data:
-    redis:
-      host: 192.168.31.169
-      port: 6379
-      #    password: # 如果有密码，写在这里；没有就删除这一行
-      timeout: 5000
+        enabled: true
+        register: true
+        prefer-ip-address: true
+        ip-address: ${HOST_IP:192.168.31.50}
+        service-name: ${spring.application.name}
+        health-check-path: /actuator/health
+        health-check-url: http://${spring.cloud.consul.discovery.ip-address}:${server.port}${spring.cloud.consul.discovery.health-check-path}
+        metadata:
+          grpc-port: ${grpc.server.port}
 
-dubbo:
-  application:
-    name: auth-center-rpc
-  protocol:
-    name: dubbo
-    port: 20880
-  registry:
-    address: nacos://${spring.cloud.nacos.discovery.server-addr}
-    username: ${spring.cloud.nacos.discovery.username}
-    password: ${spring.cloud.nacos.discovery.password}
-    group: ${spring.cloud.nacos.discovery.group}
-    parameters:
-      namespace: ${spring.cloud.nacos.discovery.namespace:}
-
+grpc:
+  server:
+    enabled: true
+    port: ${GRPC_SERVER_PORT:9090}
 
 mybatis:
   type-aliases-package: com.example.authcenter.infra.po
   mapper-locations: classpath*:mapper/*.xml
-
-jwt:
-  secret: your-256-bit-secret-your-256-bit-secret
-  expire: 3600000 # 毫秒：1小时
 
 
 logging:
@@ -69,4 +48,4 @@ logging:
     org.mybatis: debug          # MyBatis 本身
     org.mybatis.spring.SqlSessionFactoryBean: debug
     org.apache.ibatis: debug    # ⬅️ 打印 SQL 和参数
-    com.alibaba.nacos: info
+    org.springframework.cloud.consul: info

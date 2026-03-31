@@ -4,23 +4,26 @@ spring:
   config:
     import: ""
   cloud:
-    nacos:
+    consul:
+      enabled: false
       config:
         enabled: false
       discovery:
         enabled: false
-        register-enabled: false
+        register: false
   autoconfigure:
     exclude:
-      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
-      - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
+      - org.springframework.cloud.consul.serviceregistry.ConsulAutoServiceRegistrationAutoConfiguration
+      - org.springframework.cloud.consul.discovery.ConsulDiscoveryClientConfiguration
+      - org.springframework.cloud.consul.config.ConsulConfigAutoConfiguration
+      - org.springframework.cloud.consul.ConsulAutoConfiguration
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
       - org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration
-
-dubbo:
-  enabled: false
-
 jwt:
   secret: your-256-bit-secret-your-256-bit-secret
   expire: 3600000
+
+grpc:
+  server:
+    enabled: false
