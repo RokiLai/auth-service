@@ -3,17 +3,32 @@ server:
 
 spring:
   application:
-    name: auth-center-docker
+    name: auth-center
   config:
-    import: ""
+    import: "optional:consul:"
   cloud:
     consul:
-      enabled: false
+      host: ${CONSUL_HOST}
+      port: ${CONSUL_PORT:8500}
       config:
-        enabled: false
+        enabled: true
+        format: YAML
+        prefixes: config
+        default-context: application
+        profile-separator: "-"
+        data-key: data
+        watch:
+          enabled: true
       discovery:
-        enabled: false
-        register: false
+        enabled: true
+        register: true
+        prefer-ip-address: true
+        ip-address: ${HOST_IP}
+        service-name: ${spring.application.name}
+        health-check-path: /actuator/health
+        health-check-url: http://${spring.cloud.consul.discovery.ip-address}:${server.port}${spring.cloud.consul.discovery.health-check-path}
+        metadata:
+          grpc-port: ${grpc.server.port}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:auth}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
@@ -28,7 +43,13 @@ spring:
 
 app:
   backend-discovery:
-    enabled: false
+    enabled: true
+    mysql:
+      service-name: ${MYSQL_SERVICE_NAME:mysql-proxy-service}
+      database: ${MYSQL_DATABASE:auth}
+      jdbc-params: ${MYSQL_JDBC_PARAMS:useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false}
+    redis:
+      service-name: ${REDIS_SERVICE_NAME:redis-proxy-service}
 
 grpc:
   server:

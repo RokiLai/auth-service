@@ -106,25 +106,32 @@
 
 ### `docker`
 
-[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) 用于脱离 Consul 的独立部署。
+[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) 用于容器化部署，并保持与 `dev` 接近的 Consul 接入方式。
 
 该 profile 会：
 
-- 关闭 Consul 配置和服务注册
-- 通过环境变量直接连接 MySQL 和 Redis
+- 开启 Consul Config 和 Consul Discovery
+- 将容器实例注册到 Consul
+- 优先通过 Consul 发现 MySQL 和 Redis
+- 同时保留环境变量形式的 MySQL / Redis 直连配置作为兜底
 - 使用 `8080` 暴露 HTTP 服务
 - 使用 `9090` 暴露 gRPC 服务
 
 关键环境变量：
 
+- `CONSUL_HOST`
+- `CONSUL_PORT`
+- `HOST_IP`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
 - `MYSQL_DATABASE`
 - `MYSQL_USERNAME`
 - `MYSQL_PASSWORD`
+- `MYSQL_SERVICE_NAME`
 - `REDIS_HOST`
 - `REDIS_PORT`
 - `REDIS_PASSWORD`
+- `REDIS_SERVICE_NAME`
 - `JWT_SECRET`
 - `JWT_EXPIRE`
 - `GRPC_SERVER_PORT`
@@ -180,6 +187,8 @@ docker compose up -d --build
 
 - `docker-compose.yml` 只启动应用容器本身
 - MySQL 和 Redis 需要在 Compose 外部提前准备好
+- `CONSUL_HOST` 和 `HOST_IP` 必须显式提供；缺失时应直接暴露配置错误
+- `HOST_IP` 必须配置成 Consul 可访问到的容器宿主机或容器出口地址
 - 当前容器暴露端口为 `8080` 和 `9090`
 
 ## 测试
@@ -341,5 +350,5 @@ feat: 新增密码修改接口
 ## 当前注意点
 
 - `dev` 环境依赖外部 Consul、MySQL、Redis，仓库内默认地址更偏向局域网开发环境
-- 如果你不想接 Consul，`docker` profile 更适合作为独立运行方式
+- `docker` profile 现在也会接入并注册到 Consul，部署时需要显式提供 `CONSUL_HOST` 和可被 Consul 回连的 `HOST_IP`
 - 仓库同时维护中英文两份 README，后续功能变更时需要同步更新

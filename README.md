@@ -106,25 +106,32 @@ This profile is intended for tests, not for a full local runtime.
 
 ### `docker`
 
-[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) is the standalone deployment profile.
+[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) is the container deployment profile and keeps Consul integration aligned with `dev`.
 
 This profile:
 
-- disables Consul config and service registration
-- connects directly to MySQL and Redis through environment variables
+- enables Consul Config and Consul Discovery
+- registers the container instance into Consul
+- prefers resolving MySQL and Redis through Consul
+- keeps direct MySQL and Redis environment variables as fallback values
 - runs HTTP on `8080`
 - exposes gRPC on `9090`
 
 Important environment variables:
 
+- `CONSUL_HOST`
+- `CONSUL_PORT`
+- `HOST_IP`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
 - `MYSQL_DATABASE`
 - `MYSQL_USERNAME`
 - `MYSQL_PASSWORD`
+- `MYSQL_SERVICE_NAME`
 - `REDIS_HOST`
 - `REDIS_PORT`
 - `REDIS_PASSWORD`
+- `REDIS_SERVICE_NAME`
 - `JWT_SECRET`
 - `JWT_EXPIRE`
 - `GRPC_SERVER_PORT`
@@ -180,6 +187,8 @@ Notes:
 
 - `docker-compose.yml` only starts the application container
 - MySQL and Redis must already exist outside this compose file
+- `CONSUL_HOST` and `HOST_IP` must be provided explicitly; missing values should fail fast
+- `HOST_IP` must be reachable by Consul health checks
 - the container exposes `8080` and `9090`
 
 ## Test
@@ -341,5 +350,5 @@ feat: 新增密码修改接口
 ## Current Caveats
 
 - `dev` depends on external Consul, MySQL, and Redis services, and the default addresses in the repo are LAN-specific
-- the docker deployment profile is the easiest way to run the service without Consul
+- the docker profile now also integrates with Consul, so deployment must provide both `CONSUL_HOST` and a Consul-reachable `HOST_IP`
 - the repository contains both English and Chinese README files and they should be kept in sync when capabilities change
