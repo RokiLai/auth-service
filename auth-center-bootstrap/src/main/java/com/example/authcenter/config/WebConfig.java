@@ -23,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/error"); // 拦截所有请求
+                .excludePathPatterns("/error", "/actuator/health"); // 拦截所有业务请求，放行错误页和健康检查
 
     }
 

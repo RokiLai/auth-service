@@ -78,7 +78,7 @@
 
 - 使用 `8081` 暴露 HTTP 服务
 - 开启 Consul Config 和 Consul Discovery
-- 将服务注册到 Consul
+- 通过 Consul 做配置读取和后端服务发现，但不注册当前服务实例
 - 开启 MySQL 和 Redis 的后端服务发现
 - 使用 `9090` 暴露 gRPC 服务
 

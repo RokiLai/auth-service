@@ -78,7 +78,7 @@ This profile:
 
 - runs HTTP on `8081`
 - enables Consul Config and Consul Discovery
-- registers the service into Consul
+- uses Consul for configuration and backend service discovery, but does not register the current service instance
 - enables backend service discovery for MySQL and Redis
 - exposes gRPC on `9090`
 
