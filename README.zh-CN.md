@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-`auth-center` 是一个基于 Spring Boot 3、Spring Cloud、MyBatis、Redis 和 MySQL 的认证服务，采用模块化分层结构组织代码，当前主要提供身份认证、会话管理、密码修改以及 Consul 配置调试能力。
+`auth-center` 是一个基于 Spring Boot 3 的认证中心服务，采用分层模块化结构，当前同时提供 HTTP 和 gRPC 两套接口，覆盖注册、登录、登出、修改密码以及 Consul 配置调试能力。
 
 ## 技术栈
 
@@ -13,60 +13,46 @@
 - MySQL 8
 - Redis
 - Consul Config / Consul Discovery
-- gRPC Java
+- gRPC Java 1.72.0
 - JJWT 0.11.5
 
 ## 模块结构
 
-- `auth-center-common`
-  公共配置、异常定义、注解等通用能力。
-- `auth-center-domain`
-  领域层，承载 identity 的核心模型、仓储端口、领域服务。
-- `auth-center-application`
-  应用层，承接 use case、命令对象和应用上下文编排。
-- `auth-center-infrastructure`
-  基础设施层，提供 MyBatis Mapper、Redis、JWT、仓储实现等技术适配。
-- `auth-center-interfaces`
-  接口层，提供 HTTP Controller、请求响应模型。
-- `auth-center-bootstrap`
-  启动层，负责 Spring Boot 应用装配、MVC 配置、拦截器、环境配置。
+- `auth-center-common`：公共注解、proto 定义和共享契约
+- `auth-center-domain`：领域模型、领域服务、仓储端口
+- `auth-center-application`：用例编排、命令对象、应用层上下文
+- `auth-center-infrastructure`：MyBatis、Redis、JWT、持久化适配
+- `auth-center-interfaces`：HTTP 控制器、请求模型、响应模型
+- `auth-center-bootstrap`：Spring Boot 启动入口、运行时装配、按 profile 切换配置
 
-## 分层约定
+## 架构说明
 
-项目按 DDD 风格划分职责：
+项目采用 DDD 风格的分层职责拆分：
 
-- `domain` 只表达领域模型、领域规则和仓储端口
-- `application` 只做用例编排，不承载基础设施细节
-- `infrastructure` 实现技术细节和外部系统接入
-- `interfaces` 负责协议适配和参数映射
-- `bootstrap` 负责运行时装配
+- `domain` 负责业务规则和仓储端口
+- `application` 负责编排用例和认证上下文传递
+- `infrastructure` 负责外部系统接入
+- `interfaces` 负责 HTTP 协议适配
+- `bootstrap` 负责运行时装配和配置加载
 
-## 前置依赖
+相关设计文档位于 [`docs/`](./docs)：
 
-本地运行前至少需要准备：
+- [`docs/login-architecture.md`](./docs/login-architecture.md)
+- [`docs/request-auth-chain.md`](./docs/request-auth-chain.md)
+- [`docs/identity-ddd-refactor.md`](./docs/identity-ddd-refactor.md)
+
+## 运行前准备
+
+本地运行前需要准备：
 
 - JDK 17
-- Maven 3.9+ 或使用仓库自带 `./mvnw`
-- MySQL
-- Redis
-- Consul
+- Maven 3.9+，或直接使用仓库内的 `./mvnw`
+- 可访问 GitHub Packages 的认证信息
+- 在 `dev` 环境下可用的 Consul、MySQL、Redis
 
-当前 `dev` / `test` 配置默认使用如下地址：
+项目依赖 GitHub Packages 上的私有包 `com.roki:exception-spring-boot-starter:2.0.1`。
 
-- Consul: `192.168.31.169:8500`
-- MySQL: `192.168.31.169:3306/auth`
-- Redis: `192.168.31.169:6379`
-
-如果你的本地环境不同，需要修改：
-
-- [application-dev.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-dev.yml)
-- [application-test.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application-test.yml)
-
-## GitHub Packages 依赖
-
-项目依赖私有包 `com.roki:exception-spring-boot-starter:2.0.1`，来源于 GitHub Packages。
-
-第一次构建前，请确保 Maven 能访问 `github` server。可在 `~/.m2/settings.xml` 中加入：
+最小可用的 `~/.m2/settings.xml` 示例：
 
 ```xml
 <settings>
@@ -80,82 +66,121 @@
 </settings>
 ```
 
-其中 `id` 必须是 `github`，因为根 [pom.xml](/Users/rokilai/IdeaProjects/auth-service/pom.xml) 使用的仓库 id 就是这个名字。
+其中 `server.id` 必须是 `github`，因为根 [`pom.xml`](./pom.xml) 中的仓库 id 就是这个名字。
 
-## 配置说明
+## Profile 与配置
 
-默认激活环境是 `dev`，定义在：
+### `dev`
 
-- [application.yml](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/resources/application.yml)
+本地默认运行方式是 `dev`，主要配置在 [`auth-center-bootstrap/src/main/resources/application-dev.yml`](./auth-center-bootstrap/src/main/resources/application-dev.yml)。
 
-`dev` 环境会：
+该 profile 会：
 
-- 从 Consul 加载 `config/application,data`
-- 从 Consul 加载 `config/auth-center,data` 和 `config/auth-center-dev,data`
-- 注册服务到 Consul
-- 连接 MySQL 和 Redis
+- 使用 `8081` 暴露 HTTP 服务
+- 开启 Consul Config 和 Consul Discovery
+- 将服务注册到 Consul
+- 开启 MySQL 和 Redis 的后端服务发现
+- 使用 `9090` 暴露 gRPC 服务
 
-`test` 环境会加载：
+仓库中的默认值包括：
 
-- `auth-center.yml`
-- `auth-center-test.yml`
+- `CONSUL_HOST=192.168.31.169`
+- `CONSUL_PORT=8500`
+- `HOST_IP=192.168.31.50`
+- `MYSQL_SERVICE_NAME=mysql-proxy-service`
+- `MYSQL_DATABASE=auth`
+- `REDIS_SERVICE_NAME=redis-proxy-service`
+- `GRPC_SERVER_PORT=9090`
 
-其中部分 Consul 参数支持环境变量覆盖：
+### `test`
 
-- `CONSUL_HOST`
-- `CONSUL_PORT`
+[`auth-center-bootstrap/src/main/resources/application-test.yml`](./auth-center-bootstrap/src/main/resources/application-test.yml) 会关闭：
+
+- Consul 配置
+- Consul 服务注册与发现
+- 后端服务发现
+- gRPC 服务
+- JDBC / MyBatis 自动配置
+
+这个 profile 主要用于测试，不适合作为完整的本地运行环境。
+
+### `docker`
+
+[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) 用于脱离 Consul 的独立部署。
+
+该 profile 会：
+
+- 关闭 Consul 配置和服务注册
+- 通过环境变量直接连接 MySQL 和 Redis
+- 使用 `8080` 暴露 HTTP 服务
+- 使用 `9090` 暴露 gRPC 服务
+
+关键环境变量：
+
+- `MYSQL_HOST`
+- `MYSQL_PORT`
+- `MYSQL_DATABASE`
+- `MYSQL_USERNAME`
+- `MYSQL_PASSWORD`
+- `REDIS_HOST`
+- `REDIS_PORT`
+- `REDIS_PASSWORD`
+- `JWT_SECRET`
+- `JWT_EXPIRE`
+- `GRPC_SERVER_PORT`
 
 ## 本地启动
 
-使用 Maven Wrapper：
+使用默认 `dev` profile 启动：
 
 ```bash
 sh ./mvnw -pl auth-center-bootstrap clean spring-boot:run
 ```
 
-如果要显式指定环境：
+显式指定 profile 启动：
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=test
+sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=docker
 ```
-
-默认端口：
-
-- `8081`
 
 启动类：
 
-- [AuthCenterApplication.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
+- [`auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java`](./auth-center-bootstrap/src/main/java/com/example/authcenter/AuthCenterApplication.java)
 
-gRPC 默认端口：
+默认端口：
 
-- `9090`
+- HTTP：`dev` 为 `8081`，`docker` 为 `8080`
+- gRPC：`9090`
 
 ## Docker 部署
 
-如果要在另一台电脑上通过 Docker 启动后端，建议使用仓库内的 `docker` profile。该 profile 会：
+仓库内已提供：
 
-- 关闭 Consul 配置和服务注册
-- 通过环境变量连接外部已有的 MySQL 和 Redis
-- 使用容器内 `8080` 端口
+- [`docker/Dockerfile`](./docker/Dockerfile)
+- [`docker-compose.yml`](./docker-compose.yml)
 
-部署步骤：
+先构建可执行 jar：
 
 ```bash
 sh ./mvnw -pl auth-center-bootstrap -am clean package -DskipTests
+```
+
+再通过 Docker Compose 启动：
+
+```bash
 export MYSQL_HOST=你的数据库地址
 export MYSQL_USERNAME=你的数据库用户名
 export MYSQL_PASSWORD=你的数据库密码
-export REDIS_HOST=你的Redis地址
-export JWT_SECRET=你的JWT密钥
+export REDIS_HOST=你的 Redis 地址
+export JWT_SECRET=你的 JWT 密钥
 docker compose up -d --build
 ```
 
 说明：
 
-- 构建镜像前需要先打包出 `auth-center-bootstrap/target/auth-center-bootstrap-1.0-SNAPSHOT.jar`
-- 当前 `docker-compose.yml` 只部署后端服务，不再包含前端、MySQL、Redis 等容器
-- `MYSQL_PORT`、`REDIS_PORT`、`REDIS_PASSWORD`、`JWT_EXPIRE` 也支持通过环境变量覆盖
+- `docker-compose.yml` 只启动应用容器本身
+- MySQL 和 Redis 需要在 Compose 外部提前准备好
+- 当前容器暴露端口为 `8080` 和 `9090`
 
 ## 测试
 
@@ -172,14 +197,21 @@ sh ./mvnw -pl auth-center-bootstrap test
 sh ./mvnw -pl auth-center-domain test
 ```
 
-当前仓库里比较关键的测试包括：
+代表性测试：
 
-- [IdentityAuthFlowTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/controller/IdentityAuthFlowTest.java)
-- [UpdatePasswordUseCaseImplTest.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-bootstrap/src/test/java/com/example/authcenter/identity/usecase/UpdatePasswordUseCaseImplTest.java)
+- [`auth-center-bootstrap/src/test/java/com/example/authcenter/controller/IdentityAuthFlowTest.java`](./auth-center-bootstrap/src/test/java/com/example/authcenter/controller/IdentityAuthFlowTest.java)
+- [`auth-center-bootstrap/src/test/java/com/example/authcenter/identity/usecase/UpdatePasswordUseCaseImplTest.java`](./auth-center-bootstrap/src/test/java/com/example/authcenter/identity/usecase/UpdatePasswordUseCaseImplTest.java)
 
-## 主要接口
+## HTTP 接口
 
-### 1. 注册
+控制器入口：
+
+- [`auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java`](./auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java)
+- [`auth-center-interfaces/src/main/java/com/example/authcenter/controller/ConsulConfigDebugController.java`](./auth-center-interfaces/src/main/java/com/example/authcenter/controller/ConsulConfigDebugController.java)
+
+主要接口如下。
+
+### 注册
 
 `POST /auth/register`
 
@@ -191,7 +223,7 @@ sh ./mvnw -pl auth-center-domain test
 }
 ```
 
-### 2. 登录
+### 登录
 
 `POST /auth/login`
 
@@ -205,9 +237,9 @@ sh ./mvnw -pl auth-center-domain test
 成功后会：
 
 - 在响应头返回 `Authorization: Bearer <token>`
-- 在响应体返回用户基础信息和 token
+- 在响应体返回用户信息和 token
 
-### 3. 登出
+### 登出
 
 `POST /auth/logout`
 
@@ -217,7 +249,7 @@ sh ./mvnw -pl auth-center-domain test
 Authorization: Bearer <token>
 ```
 
-### 4. 修改密码
+### 修改密码
 
 `POST /auth/update-password`
 
@@ -228,45 +260,62 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5. Consul 配置调试
+### Consul 配置调试
 
 `GET /debug/config/consul`
 
-用于查看当前环境下解析到的应用名、激活 profile 和示例配置项。
+返回字段包括：
+
+- `applicationName`
+- `activeProfile`
+- `demoMessage`
+- `sampleFlag`
 
 ## gRPC
 
-项目同时暴露 gRPC 服务，供内部服务间调用。
+proto 定义：
 
-- 默认端口：`9090`
-- proto 文件：[auth_center.proto](/Users/rokilai/IdeaProjects/auth-center/auth-center-common/src/main/proto/auth_center.proto)
-- 服务：
-  `authcenter.v1.IdentityService`
-  `authcenter.v1.ConfigDebugService`
+- [`auth-center-common/src/main/proto/auth_center.proto`](./auth-center-common/src/main/proto/auth_center.proto)
 
-## 认证流程说明
+对外服务：
 
-- 登录成功后，JWT 会通过响应头返回
-- 接口层通过 `JwtInterceptor` 校验 token
-- 当前操作者会通过 MVC 参数解析注入到应用层命令对象
+- `authcenter.v1.IdentityService`
+- `authcenter.v1.ConfigDebugService`
 
-相关入口可参考：
+身份相关 RPC：
 
-- [IdentityController.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java)
-- [JwtInterceptor.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java)
-- [CurrentOperatorArgumentResolver.java](/Users/rokilai/IdeaProjects/auth-service/auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java)
+- `Register`
+- `Login`
+- `Logout`
+- `UpdatePassword`
 
-## CI 约定
+配置调试 RPC：
 
-仓库当前有两条主要 GitHub Actions 工作流：
+- `GetConsulConfig`
+
+## 认证链路
+
+- 登录成功后返回 JWT
+- HTTP 接口层通过 `JwtInterceptor` 校验 token
+- 当前操作者通过 MVC 参数解析器注入到业务用例
+
+相关组件：
+
+- [`auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java`](./auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java)
+- [`auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java`](./auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java)
+
+## CI 与仓库约定
+
+当前主要 GitHub Actions 工作流：
 
 - `Build & Test Spring Boot App`
 - `Commit Message Check`
+- `Auto Approve PR`
 
 提交信息规范要求：
 
 - 标题格式：`type: 中文标题`
-- 第二行必须为空
+- 第二行必须为空行
 - 正文必须是连续编号列表
 
 允许的 `type`：
@@ -289,16 +338,8 @@ feat: 新增密码修改接口
   3. 补充密码修改的核心用例测试
 ```
 
-## 后续可补充内容
+## 当前注意点
 
-如果后面要继续完善 README，建议增加：
-
-- 数据库表结构说明
-- 初始化 SQL
-- Consul 配置示例
-- Postman / Apifox 调试集合
-- 部署方式和生产配置约定
-
-如果要在数据库里清理历史权限表，可直接参考：
-
-- [drop-authorization-tables.sql](/Users/rokilai/IdeaProjects/auth-service/docs/drop-authorization-tables.sql)
+- `dev` 环境依赖外部 Consul、MySQL、Redis，仓库内默认地址更偏向局域网开发环境
+- 如果你不想接 Consul，`docker` profile 更适合作为独立运行方式
+- 仓库同时维护中英文两份 README，后续功能变更时需要同步更新

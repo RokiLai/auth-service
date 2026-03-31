@@ -2,40 +2,46 @@
 
 ## 目标
 
-描述一个带 `Authorization: Bearer <token>` 的请求，从进入服务到到达 controller 层之前，当前项目是如何完成鉴权和身份注入的。
+说明当前项目里，一个携带 `Authorization: Bearer <token>` 的请求，是如何在进入 controller 之前完成认证和当前身份注入的。
+
+本文描述的是当前代码事实，不是历史方案。
+
+## 当前实现总览
+
+当前链路分布在三个位置：
+
+- 接口层拦截器：[`auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java`](../auth-center-interfaces/src/main/java/com/example/authcenter/config/JwtInterceptor.java)
+- 应用层鉴权用例：[`auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/AuthenticateUseCaseImpl.java`](../auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/AuthenticateUseCaseImpl.java)
+- 当前身份参数解析器：[`auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java`](../auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java)
+
+MVC 注册入口位于：
+
+- [`auth-center-bootstrap/src/main/java/com/example/authcenter/config/WebConfig.java`](../auth-center-bootstrap/src/main/java/com/example/authcenter/config/WebConfig.java)
 
 ## 总览流程图
 
 ```mermaid
 flowchart TD
-    A["客户端请求<br/>Authorization: Bearer token"] --> B["DispatcherServlet.doDispatch(...)"]
-    B --> C["JwtInterceptor.preHandle(request, response, handler)"]
+    A["客户端请求<br/>Authorization: Bearer token"] --> B["DispatcherServlet"]
+    B --> C["JwtInterceptor.preHandle(...)"]
 
-    C --> D{"handler 是否为 HandlerMethod"}
+    C --> D{"是否 HandlerMethod"}
     D -- 否 --> Z["直接放行"]
-    D -- 是 --> E["handlerMethod.getMethod()"]
-    E --> F{"method 是否标注 @PassToken"}
+    D -- 是 --> E{"方法是否标注 @PassToken"}
 
-    F -- 是 --> G["passToken.required()"]
-    G -- true --> Z
-    F -- 否 --> H["request.getHeader('Authorization')"]
-    H --> I["JwtInterceptor.resolveToken(authorizationHeader)"]
-    I --> J["AuthenticateUseCase.authenticate(rawToken)"]
-
-    J --> K["IdentityTokenProvider.parse(rawToken)"]
-    K --> L["TokenClaims.getSessionId()"]
-    L --> M["IdentitySessionRepository.findBySessionId(sessionId)"]
-    M --> N{"session 存在<br/>且 token 匹配"}
-
-    N -- 否 --> O["抛出 TokenInvalidException<br/>或 TokenExpiredException"]
-    N -- 是 --> P["组装 CurrentOperator"]
-    P --> Q["request.setAttribute('currentOperator', currentOperator)"]
-
-    Q --> R["InvocableHandlerMethod.getMethodArgumentValues(...)"]
-    R --> S["CurrentOperatorArgumentResolver.supportsParameter(...)"]
-    S --> T["CurrentOperatorArgumentResolver.resolveArgument(...)"]
-    T --> U["request.getAttribute('currentOperator')"]
-    U --> V["Controller 方法执行"]
+    E -- 是 --> Z
+    E -- 否 --> F["读取 Authorization 请求头"]
+    F --> G["解析 Bearer token"]
+    G --> H["AuthenticateUseCase.authenticate(rawToken)"]
+    H --> I["IdentityTokenProvider.parse(rawToken)"]
+    I --> J["读取 sid"]
+    J --> K["IdentitySessionRepository.findBySessionId(sid)"]
+    K --> L{"session 存在且 token 匹配"}
+    L -- 否 --> M["抛出 TokenInvalidException / TokenExpiredException"]
+    L -- 是 --> N["构建 CurrentOperator"]
+    N --> O["request.setAttribute('currentOperator', ...)"]
+    O --> P["CurrentOperatorArgumentResolver.resolveArgument(...)"]
+    P --> Q["Controller 方法执行"]
 ```
 
 ## 时序图
@@ -49,75 +55,100 @@ sequenceDiagram
     participant TokenProvider as IdentityTokenProvider
     participant SessionRepo as IdentitySessionRepository
     participant Resolver as CurrentOperatorArgumentResolver
-    participant Controller as Controller
+    participant Controller as IdentityController
 
-    Client->>MVC: doDispatch(request, response)
+    Client->>MVC: HTTP 请求
     MVC->>Interceptor: preHandle(request, response, handler)
 
-    alt 不是 Controller 方法
+    alt 非 HandlerMethod
         Interceptor-->>MVC: true
-    else 是 Controller 方法
-        Interceptor->>Interceptor: handlerMethod.getMethod()
-        Interceptor->>Interceptor: method.isAnnotationPresent(PassToken.class)
-        alt 标注了 @PassToken
+    else Controller 方法
+        Interceptor->>Interceptor: 检查 @PassToken
+        alt 标注 @PassToken
             Interceptor-->>MVC: true
-        else 需要鉴权
-            Interceptor->>Interceptor: request.getHeader("Authorization")
-            Interceptor->>Interceptor: resolveToken(authorizationHeader)
+        else 需要认证
+            Interceptor->>Interceptor: resolveToken(Authorization)
             Interceptor->>UseCase: authenticate(rawToken)
             UseCase->>TokenProvider: parse(rawToken)
             TokenProvider-->>UseCase: TokenClaims
-            UseCase->>UseCase: claims.getSessionId()
-            UseCase->>SessionRepo: findBySessionId(sessionId)
+            UseCase->>SessionRepo: findBySessionId(claims.sessionId)
             SessionRepo-->>UseCase: IdentitySession
             UseCase->>UseCase: session.matchesToken(rawToken)
-            UseCase->>UseCase: new CurrentOperator(...)
             UseCase-->>Interceptor: CurrentOperator
-            Interceptor->>Interceptor: request.setAttribute("currentOperator", currentOperator)
+            Interceptor->>Interceptor: request.setAttribute("currentOperator", ...)
             Interceptor-->>MVC: true
         end
     end
 
-    MVC->>Resolver: supportsParameter(parameter)
+    MVC->>Resolver: supportsParameter(...)
     Resolver-->>MVC: true
-    MVC->>Resolver: resolveArgument(parameter, mavContainer, webRequest, binderFactory)
-    Resolver->>Resolver: webRequest.getNativeRequest(HttpServletRequest.class)
-    Resolver->>Resolver: request.getAttribute("currentIdentity")
+    MVC->>Resolver: resolveArgument(...)
     Resolver-->>MVC: CurrentOperator
-    MVC->>Controller: logout(currentOperator) / updatePassword(request, currentOperator)
+    MVC->>Controller: 调用 controller 方法
 ```
 
-## 方法调用清单
-
-按当前代码实现，请求到 controller 前的关键方法调用顺序如下：
+## 关键方法调用顺序
 
 ```text
-DispatcherServlet.doDispatch(...)
-  -> HandlerExecutionChain.applyPreHandle(...)
-    -> JwtInterceptor.preHandle(request, response, handler)
-      -> handlerMethod.getMethod()
-      -> method.isAnnotationPresent(PassToken.class)
-      -> request.getHeader("Authorization")
-      -> JwtInterceptor.resolveToken(authorizationHeader)
-      -> AuthenticateUseCaseImpl.authenticate(rawToken)
-        -> IdentityTokenProvider.parse(rawToken)
-        -> TokenClaims.getSessionId()
-        -> IdentitySessionRepository.findBySessionId(sessionId)
-        -> IdentitySession.matchesToken(rawToken)
-        -> new CurrentOperator(...)
-      -> request.setAttribute("currentOperator", currentOperator)
-  -> InvocableHandlerMethod.getMethodArgumentValues(...)
-    -> CurrentOperatorArgumentResolver.supportsParameter(parameter)
-    -> CurrentOperatorArgumentResolver.resolveArgument(...)
-      -> webRequest.getNativeRequest(HttpServletRequest.class)
-      -> request.getAttribute("currentOperator")
-  -> Controller.logout(@AuthIdentity CurrentOperator)
-     或 Controller.updatePassword(..., @AuthIdentity CurrentOperator)
+DispatcherServlet
+  -> JwtInterceptor.preHandle(...)
+    -> method.isAnnotationPresent(PassToken.class)
+    -> request.getHeader("Authorization")
+    -> JwtInterceptor.resolveToken(...)
+    -> AuthenticateUseCaseImpl.authenticate(rawToken)
+      -> IdentityTokenProvider.parse(rawToken)
+      -> IdentitySessionRepository.findBySessionId(sessionId)
+      -> IdentitySession.matchesToken(rawToken)
+      -> new CurrentOperator(...)
+    -> request.setAttribute("currentOperator", currentOperator)
+  -> CurrentOperatorArgumentResolver.supportsParameter(...)
+  -> CurrentOperatorArgumentResolver.resolveArgument(...)
+  -> Controller 方法执行
 ```
 
-## Controller 层看到的形态
+## 当前项目的几个关键点
 
-鉴权成功后，controller 不需要自己读取 `HttpServletRequest`，而是直接声明参数：
+### 1. `@PassToken` 只跳过方法级校验
+
+当前 `JwtInterceptor` 只检查方法上的 `@PassToken`，没有检查类级别注解。
+
+### 2. 当前登录态是按 `sessionId` 鉴权
+
+当前不是“按 username 从 Redis 查登录态”，而是：
+
+```text
+token -> sid -> redis(login:session:{sid}) -> IdentitySession
+```
+
+同时 Redis 里还维护：
+
+```text
+login:user_session:{accountId} -> sid
+```
+
+实现见：
+
+- [`auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java`](../auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java)
+
+### 3. `CurrentOperator` 通过 request attribute 传递
+
+当前实现不依赖 `ThreadLocal` 上下文，而是：
+
+- 拦截器写入 `request.setAttribute("currentOperator", ...)`
+- 参数解析器读取并注入 `@AuthIdentity CurrentOperator`
+
+### 4. 应用层只做 token 鉴权，不感知 HTTP
+
+`AuthenticateUseCaseImpl` 的职责是：
+
+- 解析 JWT
+- 读取 sessionId
+- 查询当前有效会话
+- 组装 `CurrentOperator`
+
+它不直接依赖 `HttpServletRequest` 或 Spring MVC API。
+
+## Controller 层看到的形态
 
 ```java
 @PostMapping("/logout")
@@ -132,45 +163,30 @@ public Result<Boolean> updatePassword(@Valid @RequestBody UpdatePasswordRequest 
                                       @AuthIdentity CurrentOperator currentOperator) {
     updatePasswordUseCase.updatePassword(new UpdatePasswordCommand(
             currentOperator,
-            request.getOldPassword(),
-            request.getNewPassword()
+            request.oldPassword(),
+            request.newPassword()
     ));
     return Result.success(true);
 }
 ```
 
-## 当前项目代码映射
-
-- 拦截入口
-  - `auth-center-bootstrap/src/main/java/com/example/authcenter/config/JwtInterceptor.java`
-- 鉴权用例
-  - `auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/AuthenticateUseCaseImpl.java`
-- 会话仓储
-  - `auth-center-domain/src/main/java/com/example/authcenter/domain/identity/repository/IdentitySessionRepository.java`
-  - `auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java`
-- 当前身份参数解析器
-  - `auth-center-interfaces/src/main/java/com/example/authcenter/config/CurrentOperatorArgumentResolver.java`
-- MVC 注册
-  - `auth-center-bootstrap/src/main/java/com/example/authcenter/config/WebConfig.java`
-- controller 身份注入点
-  - `auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java`
-
 ## 分层职责
 
-- `bootstrap`
-  - 负责拦截请求、调用鉴权用例、把身份写入 request、注册参数解析器
-- `application`
-  - 负责 token 鉴权用例编排
-- `domain`
-  - 负责会话仓储端口、token 解析端口、登录态有效性规则
-- `infrastructure`
-  - 负责 Redis 会话存储、JWT 解析实现
 - `interfaces`
-  - 负责接收已认证身份并继续调用应用层用例
+  负责拦截请求、解析身份参数、承接 controller
+- `application`
+  负责 token 鉴权用例编排
+- `domain`
+  负责 token claims、session 模型、登录态有效性规则和端口定义
+- `infrastructure`
+  负责 JWT 和 Redis 的技术实现
+- `bootstrap`
+  负责 MVC 组装与注册
 
-## 这条链路的设计要点
+## 当前文档结论
 
-- 身份上下文只在接口适配层传递，不再依赖 `ThreadLocal`
-- `JwtInterceptor` 只负责“认证并写入 request attribute”
-- controller 通过 `@AuthIdentity` 显式声明自己依赖当前身份
-- application 层只接收显式参数，不感知 HTTP 请求对象
+这条链路已经完成了三件重要事情：
+
+- 认证上下文从“隐式上下文”改成了显式的 `CurrentOperator`
+- 登录态校验从“按 username 查缓存”切到了“按 sid 查 session”
+- HTTP 层与业务层之间通过用例和参数解析器解耦

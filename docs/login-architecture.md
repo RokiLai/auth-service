@@ -1,29 +1,35 @@
-# 登录系统架构图
+# 登录架构说明
 
-## 组件架构图
+## 目标
+
+说明当前项目里登录能力的真实分层结构、调用顺序和模块映射。
+
+本文描述的是当前实现，不再混用“目标架构”和“历史改造草图”。
+
+## 当前组件架构图
 
 ```mermaid
 flowchart LR
     A[客户端 Web / App] --> B[interfaces<br/>IdentityController]
-    B --> C[application<br/>LoginUseCase]
+    B --> C[application<br/>LoginUseCaseImpl]
+    C --> D[domain<br/>AuthenticationDomainServiceImpl]
 
-    C --> D[domain<br/>AuthenticationDomainService]
-    C --> E[domain<br/>IdentityAccountRepository]
-    C --> F[domain<br/>IdentitySessionRepository]
-    C --> G[domain<br/>IdentityTokenProvider]
-    C --> H[domain<br/>PasswordHasher]
+    D --> E[domain port<br/>IdentityAccountRepository]
+    D --> F[domain port<br/>IdentitySessionRepository]
+    D --> G[domain port<br/>IdentityTokenProvider]
+    D --> H[domain port<br/>PasswordHasher]
+    D --> I[domain factory<br/>IdentitySessionFactory]
 
-    E --> I[infrastructure<br/>MyBatis IdentityAccountRepositoryImpl]
-    F --> J[infrastructure<br/>RedisSessionStoreImpl]
-    G --> K[infrastructure<br/>JwtIdentityTokenProvider]
-    H --> L[infrastructure<br/>BcryptPasswordHasher]
+    E --> J[infrastructure<br/>IdentityAccountRepositoryImpl]
+    F --> K[infrastructure<br/>RedisSessionStoreImpl]
+    G --> L[infrastructure<br/>JwtIdentityTokenProvider]
+    H --> M[infrastructure<br/>BcryptPasswordHasher]
 
-    I --> M[(MySQL)]
-    J --> N[(Redis)]
+    J --> N[(MySQL)]
+    K --> O[(Redis)]
 
-    O[bootstrap<br/>JwtInterceptor / WebConfig] --> B
-    O --> F
-    O --> G
+    P[bootstrap<br/>WebConfig] --> B
+    Q[interfaces<br/>JwtInterceptor] --> B
 ```
 
 ## 登录时序图
@@ -31,181 +37,142 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant Client as 客户端
-    participant Controller as interfaces/IdentityController
-    participant App as application/LoginUseCase
-    participant Repo as domain+infra/IdentityAccountRepository
-    participant Auth as domain/AuthenticationDomainService
+    participant Controller as IdentityController
+    participant App as LoginUseCaseImpl
+    participant Domain as AuthenticationDomainServiceImpl
+    participant AccountRepo as IdentityAccountRepository
+    participant SessionRepo as IdentitySessionRepository
     participant Token as IdentityTokenProvider
-    participant Session as IdentitySessionRepository
-    participant Redis as Redis
+    participant Hasher as PasswordHasher
     participant DB as MySQL
+    participant Redis as Redis
 
-    Client->>Controller: POST /auth/login(username, password)
+    Client->>Controller: POST /auth/login
     Controller->>App: login(username, password)
-    App->>Repo: findByUsername(username)
-    Repo->>DB: 查询账号
-    DB-->>Repo: 账号信息
-    Repo-->>App: 账号实体
-    App->>Auth: authenticate(username, password)
-    Auth->>Token: issue(accountId, username, sessionId)
-    Token-->>Auth: accessToken
-    Auth->>Session: save(loginSession)
-    Session->>Redis: 写入会话
-    Redis-->>Session: 成功
-    Auth-->>App: AuthenticatedIdentity
-    App-->>Controller: LoginResult(token, userInfo)
-    Controller-->>Client: 200 OK
+    App->>Domain: authenticate(username, password)
+    Domain->>AccountRepo: findByUsername(username)
+    AccountRepo->>DB: 查询账号
+    DB-->>AccountRepo: IdentityAccount
+    Domain->>Hasher: matchPassword(...)
+    Domain->>SessionRepo: findByAccountId(accountId)
+    Domain->>SessionRepo: delete old session / binding
+    Domain->>Token: issue(accountId, username, sessionId)
+    Domain-->>App: AuthenticatedIdentity(account, session)
+    App->>SessionRepo: save(session)
+    SessionRepo->>Redis: 写入 login:session:{sid}
+    SessionRepo->>Redis: 写入 login:user_session:{accountId}
+    App-->>Controller: LoginResult
+    Controller-->>Client: 200 + Authorization header
 ```
 
-## 基本说明
+## 当前登录实现
 
-- `interfaces` 只负责请求和响应转换。
-- `application` 负责登录用例编排。
-- `domain` 负责核心模型、规则和端口定义。
-- `infrastructure` 负责 MyBatis、Redis、JWT、密码加密等适配实现。
-- `bootstrap` 负责拦截器、MVC 配置和应用装配。
+当前登录入口位于：
 
-## 当前项目映射
+- [`auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java`](../auth-center-interfaces/src/main/java/com/example/authcenter/controller/IdentityController.java)
 
-### 现有模块
+当前登录用例位于：
+
+- [`auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/LoginUseCaseImpl.java`](../auth-center-application/src/main/java/com/example/authcenter/identity/usecase/impl/LoginUseCaseImpl.java)
+
+核心认证规则位于：
+
+- [`auth-center-domain/src/main/java/com/example/authcenter/domain/identity/service/impl/AuthenticationDomainServiceImpl.java`](../auth-center-domain/src/main/java/com/example/authcenter/domain/identity/service/impl/AuthenticationDomainServiceImpl.java)
+
+会话持久化位于：
+
+- [`auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java`](../auth-center-infrastructure/src/main/java/com/example/authcenter/infra/service/RedisSessionStoreImpl.java)
+
+## 当前流程分层
+
+### `interfaces`
+
+职责：
+
+- 校验 HTTP 请求体
+- 调用 `LoginUseCase`
+- 设置响应头 `Authorization: Bearer <token>`
+- 返回统一响应体
+
+### `application`
+
+当前 `LoginUseCaseImpl` 只做两件事：
+
+- 调用领域服务完成认证
+- 持久化领域返回的新会话，并转成 `LoginResult`
+
+它不负责：
+
+- 查询账号
+- 密码校验
+- 旧会话替换
+- token 生成
+
+### `domain`
+
+当前 `AuthenticationDomainServiceImpl` 负责：
+
+- 根据用户名查找账号
+- 校验密码
+- 查找并撤销旧会话
+- 生成新的 `sessionId`
+- 生成新的 JWT
+- 创建新的 `IdentitySession`
+
+当前项目已明确采用单点登录策略：
+
+```text
+一个账号同一时间只保留一个有效 session
+新登录覆盖旧 session
+```
+
+### `infrastructure`
+
+当前实现包括：
+
+- MyBatis 账号仓储
+- Redis 会话存储
+- JWT token provider
+- BCrypt 密码哈希器
+
+Redis key 结构为：
+
+```text
+login:session:{sid}
+login:user_session:{accountId}
+```
+
+## 模块映射
 
 - `auth-center-interfaces`
-  - 当前入口：`IdentityController`
+  - `IdentityController`
 - `auth-center-application`
-  - 当前用例：`LoginUseCase`、`LogoutUseCase`、`RegisterUseCase`、`UpdatePasswordUseCase`、`AuthenticateUseCase`
+  - `LoginUseCaseImpl`
+  - `AuthenticateUseCaseImpl`
+  - `LogoutUseCaseImpl`
+  - `RegisterUseCaseImpl`
+  - `UpdatePasswordUseCaseImpl`
 - `auth-center-domain`
-  - 当前模型：`IdentityAccount`、`IdentitySession`
-  - 当前端口：`IdentityAccountRepository`、`IdentitySessionRepository`、`IdentityTokenProvider`、`PasswordHasher`
+  - `IdentityAccount`
+  - `IdentitySession`
+  - `AuthenticationDomainServiceImpl`
+  - `RegistrationDomainService`
+  - `CredentialDomainService`
+  - `SessionDomainService`
 - `auth-center-infrastructure`
-  - 当前仓储实现：`IdentityAccountRepositoryImpl`、`RedisSessionStoreImpl`
-  - 当前适配实现：`JwtIdentityTokenProvider`、`BcryptPasswordHasher`
-  - 当前持久化：MyBatis Mapper + XML、Redis
-- `auth-center-common`
-  - 当前共享能力：`JwtUtil`、`JwtProperties`、`PassToken`
+  - `IdentityAccountRepositoryImpl`
+  - `RedisSessionStoreImpl`
+  - `JwtIdentityTokenProvider`
+  - `BcryptPasswordHasher`
 - `auth-center-bootstrap`
-  - 当前运行配置：`AuthCenterApplication`、`JwtInterceptor`、`WebConfig`
+  - `AuthCenterApplication`
+  - `WebConfig`
 
-## 面向当前项目的目标登录架构
+## 当前设计结论
 
-```mermaid
-flowchart TD
-    A[POST /auth/login] --> B[interfaces<br/>IdentityController]
-    B --> C[application<br/>LoginUseCase.login]
-    C --> D[domain<br/>AuthenticationDomainService]
-    D --> E[domain 端口<br/>IdentityAccountRepository]
-    E --> F[infrastructure<br/>IdentityAccountRepositoryImpl]
-    F --> G[(MySQL)]
-    D --> H[domain 端口<br/>PasswordHasher]
-    H --> I[infrastructure<br/>BcryptPasswordHasher]
-    D --> J[domain 端口<br/>IdentityTokenProvider]
-    J --> K[infrastructure<br/>JwtIdentityTokenProvider]
-    D --> L[domain 端口<br/>IdentitySessionRepository]
-    L --> M[infrastructure<br/>RedisSessionStoreImpl]
-    M --> N[(Redis)]
-    C --> O[application DTO<br/>LoginResult]
-    O --> B
-    B --> P[HTTP 响应]
-```
+和早期版本相比，现在登录架构已经发生了两个明确变化：
 
-## 当前流程与目标流程对比
+1. 认证决策已经从应用层下沉到领域服务
+2. 登录态已经收敛为 session 模型，而不是按用户名保存简单缓存
 
-### 当前流程
-
-```text
-IdentityController
-  -> LoginUseCaseImpl.login
-  -> AuthenticationDomainService.authenticate
-  -> IdentityAccountRepository.findByUsername
-  -> PasswordHasher.matches
-  -> IdentityTokenProvider.issue
-  -> IdentitySessionRepository.save
-  -> response header Authorization
-```
-
-### 目标流程
-
-```text
-IdentityController
-  -> LoginUseCase.login(username, password)
-  -> AuthenticationDomainService.authenticate
-  -> IdentityAccountRepository.findByUsername
-  -> IdentityTokenProvider.issue
-  -> IdentitySessionRepository.save(IdentitySession)
-  -> LoginResult
-```
-
-## 改造方向
-
-### 1. interfaces 层
-
-- 保留 `IdentityController` 作为认证接口入口。
-- 只负责：
-  - 请求参数校验
-  - 请求对象转用例入参
-  - 结果对象转响应对象
-
-### 2. application 层
-
-- 使用明确的 use case 组织认证流程。
-- 当前已具备：
-  - `LoginUseCase`
-  - `LogoutUseCase`
-  - `RegisterUseCase`
-  - `UpdatePasswordUseCase`
-- 这一层只负责“调度”，不承载底层技术细节。
-
-### 3. domain 层
-
-- 保留 `IdentityAccount`、`IdentitySession` 作为核心模型。
-- 明确的认证端口：
-  - `PasswordHasher`
-  - `IdentityTokenProvider`
-  - `IdentitySessionRepository`
-- 核心认证规则收敛在：
-  - `AuthenticationDomainService`
-
-### 4. infrastructure 层
-
-- 保留 MyBatis 仓储实现。
-- 用 BCrypt 适配器替代明文密码比较。
-- Redis 保存结构化登录会话。
-
-### 5. bootstrap 层
-
-- 保留请求拦截和应用装配职责。
-- 拦截器改为只负责：
-  - 解析 token
-  - 解析并校验 session
-  - 构建请求上下文
-  - 请求结束后清理上下文
-
-## 登录会话模型建议
-
-```text
-LoginSession
-  sessionId
-  accountId
-  username
-  token
-```
-
-## Token 载荷建议
-
-```json
-{
-  "sub": "username",
-  "uid": 1001,
-  "sid": "session-id",
-  "tv": 1,
-  "iat": 1710000000,
-  "exp": 1710001800
-}
-```
-
-## 模块边界约束
-
-- `interfaces` 不能直接访问 MyBatis 或 Redis。
-- `application` 不应依赖 HTTP 语义。
-- `domain` 不能直接依赖 Spring MVC、MyBatis、Redis API。
-- `infrastructure` 负责实现端口，不负责定义用例。
-- `bootstrap` 只负责装配，不承载核心业务规则。
+因此后续再看登录链路时，应当以“领域服务产出 `AuthenticatedIdentity`，应用层负责落库和返回结果”作为主理解模型。
