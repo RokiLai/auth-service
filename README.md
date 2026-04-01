@@ -293,10 +293,7 @@ Services:
 
 Exposed identity RPCs:
 
-- `Register`
-- `Login`
-- `Logout`
-- `UpdatePassword`
+- `ValidateToken`
 
 Config debug RPC:
 

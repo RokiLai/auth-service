@@ -26,6 +26,20 @@ public class IdentityAccountRepositoryImpl implements IdentityAccountRepository 
     }
 
     @Override
+    public IdentityAccount findById(Long id) {
+        AccountPO account = accountMapper.findById(id);
+        if (account == null) {
+            return null;
+        }
+        return identityAccountFactory.restore(
+                account.getId(),
+                account.getUsername(),
+                new PasswordHash(account.getPassword()),
+                account.getEmail()
+        );
+    }
+
+    @Override
     public IdentityAccount findByUsername(String username) {
         AccountPO account = accountMapper.findByUsername(username);
         if (account == null) {
