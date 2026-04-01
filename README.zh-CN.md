@@ -293,10 +293,7 @@ proto 定义：
 
 身份相关 RPC：
 
-- `Register`
-- `Login`
-- `Logout`
-- `UpdatePassword`
+- `ValidateToken`
 
 配置调试 RPC：
 

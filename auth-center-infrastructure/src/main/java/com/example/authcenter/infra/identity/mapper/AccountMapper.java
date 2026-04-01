@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface AccountMapper {
+    AccountPO findById(@Param("id") Long id);
+
     /**
      * 根据用户名查询 AccountPO
      * @param username 用户名

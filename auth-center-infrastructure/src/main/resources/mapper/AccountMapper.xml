@@ -11,6 +11,12 @@
         <result property="email" column="email"/>
     </resultMap>
 
+    <select id="findById" resultMap="AccountPOResultMap">
+        SELECT id, username, password, email
+        FROM account
+        WHERE id = #{id}
+    </select>
+
     <select id="findByUsername" resultMap="AccountPOResultMap">
         SELECT id, username, password, email
         FROM account
