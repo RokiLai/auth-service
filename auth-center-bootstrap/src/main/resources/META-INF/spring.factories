@@ -1,2 +1,3 @@
 org.springframework.boot.env.EnvironmentPostProcessor=\
+com.example.authcenter.config.ProdServiceRegisterIpValidationEnvironmentPostProcessor,\
 com.example.authcenter.config.ConsulBackendDiscoveryEnvironmentPostProcessor

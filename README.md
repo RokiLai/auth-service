@@ -40,6 +40,7 @@ Related design notes are under [`docs/`](./docs), including:
 - [`docs/login-architecture.md`](./docs/login-architecture.md)
 - [`docs/request-auth-chain.md`](./docs/request-auth-chain.md)
 - [`docs/identity-ddd-refactor.md`](./docs/identity-ddd-refactor.md)
+- [`docs/service-discovery-consumer-guide.md`](./docs/service-discovery-consumer-guide.md)
 
 ## Prerequisites
 
@@ -108,7 +109,7 @@ This profile is intended for tests, not for a full local runtime.
 This profile:
 
 - enables Consul Config and Consul Discovery
-- registers the container instance into Consul
+- registers separate HTTP and RPC service instances into Consul
 - only requires local Consul connection settings at startup
 - resolves MySQL and Redis addresses through service discovery
 - reads credentials, JWT, ports, and other runtime configuration from Consul Config
@@ -117,6 +118,9 @@ Important environment variables:
 
 - `CONSUL_HOST`
 - `CONSUL_PORT`
+- `SERVICE_REGISTER_IP` (required; used as the host-reachable registration address published to Consul)
+- `APP_HTTP_SERVICE_NAME` (optional; HTTP service name, defaults to `auth-center-http`)
+- `APP_RPC_SERVICE_NAME` (optional; RPC service name, defaults to `auth-center-rpc`)
 
 ## Run Locally
 
@@ -139,6 +143,8 @@ Main class:
 
 Ports and other runtime settings should now be managed in Consul Config.
 
+For container deployments, the Consul registration address now always uses `SERVICE_REGISTER_IP`. Set it explicitly to the host machine's reachable IP so the instance is not registered with a container-internal or otherwise incorrect address. If it is missing, both `docker compose` and the application startup in the `prod` profile now fail fast with an explicit error.
+
 ## Docker Deployment
 
 The repository includes:
@@ -155,7 +161,8 @@ sh ./mvnw -pl auth-center-bootstrap -am clean package -DskipTests
 Then start with Docker Compose:
 
 ```bash
-export CONSUL_HOST=your-consul-host
+CONSUL_HOST=your-consul-host \
+SERVICE_REGISTER_IP=host-reachable-ip \
 docker compose up -d --build
 ```
 
@@ -166,6 +173,34 @@ Notes:
 - credentials, JWT, ports, and other runtime properties should be prepared in Consul Config
 - locally, the application only needs to be able to reach Consul
 - the container exposes `8080` and `9090`
+- Consul registers two distinct services by default: `auth-center-http` for HTTP and `auth-center-rpc` for RPC
+- the HTTP service uses `/actuator/health`, while the RPC service uses a TCP health check against `grpc.server.port`
+
+## Service Discovery Contract
+
+Consumers should no longer resolve a single `auth-center` service name and infer ports from metadata. Resolve services by protocol instead:
+
+- discover `auth-center-http` for HTTP calls
+- discover `auth-center-rpc` for RPC calls
+
+To customize the published service names, pass them explicitly when starting the provider:
+
+```bash
+APP_HTTP_SERVICE_NAME=custom-auth-http \
+APP_RPC_SERVICE_NAME=custom-auth-rpc \
+CONSUL_HOST=your-consul-host \
+SERVICE_REGISTER_IP=host-reachable-ip \
+docker compose up -d --build
+```
+
+Consumer examples:
+
+- HTTP base URL: `http://auth-center-http`
+- gRPC target: `auth-center-rpc:9090` (the actual port should come from the Consul instance record)
+
+For fuller Java consumer examples, see:
+
+- [`docs/service-discovery-consumer-guide.md`](./docs/service-discovery-consumer-guide.md)
 
 ## Test
 

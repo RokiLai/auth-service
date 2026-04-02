@@ -3,3 +3,4 @@ spring:
     consul:
       discovery:
         register: true
+        ip-address: ${SERVICE_REGISTER_IP}

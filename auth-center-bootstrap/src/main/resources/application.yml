@@ -18,10 +18,11 @@ spring:
       discovery:
         enabled: true
         prefer-ip-address: true
-        service-name: ${spring.application.name}
+        service-name: ${APP_HTTP_SERVICE_NAME:${spring.application.name}-http}
         health-check-path: /actuator/health
         metadata:
-          grpc-port: ${grpc.server.port}
+          application-name: ${spring.application.name}
+          protocol: http
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${MYSQL_USERNAME}
@@ -32,6 +33,10 @@ spring:
       timeout: ${REDIS_TIMEOUT:5000}
 
 app:
+  consul:
+    rpc-registration:
+      enabled: true
+      service-name: ${APP_RPC_SERVICE_NAME:${spring.application.name}-rpc}
   backend-discovery:
     enabled: true
     mysql:

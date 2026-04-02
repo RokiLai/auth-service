@@ -40,6 +40,7 @@
 - [`docs/login-architecture.md`](./docs/login-architecture.md)
 - [`docs/request-auth-chain.md`](./docs/request-auth-chain.md)
 - [`docs/identity-ddd-refactor.md`](./docs/identity-ddd-refactor.md)
+- [`docs/service-discovery-consumer-guide.md`](./docs/service-discovery-consumer-guide.md)
 
 ## 运行前准备
 
@@ -108,7 +109,7 @@
 该 profile 会：
 
 - 开启 Consul Config 和 Consul Discovery
-- 将容器实例注册到 Consul
+- 将 HTTP 和 RPC 两个服务实例分别注册到 Consul
 - 启动时只要求本地提供 Consul 连接信息
 - MySQL 和 Redis 地址通过服务发现获取
 - 账号密码、JWT、端口等业务配置从 Consul Config 读取
@@ -117,6 +118,9 @@
 
 - `CONSUL_HOST`
 - `CONSUL_PORT`
+- `SERVICE_REGISTER_IP`（必填，用于显式指定注册到 Consul 的宿主机地址）
+- `APP_HTTP_SERVICE_NAME`（可选，HTTP 服务名，默认 `auth-center-http`）
+- `APP_RPC_SERVICE_NAME`（可选，RPC 服务名，默认 `auth-center-rpc`）
 
 ## 本地启动
 
@@ -139,6 +143,8 @@ sh ./mvnw -pl auth-center-bootstrap -am spring-boot:run -Dspring-boot.run.profil
 
 服务端口等运行参数建议统一维护在 Consul Config 中。
 
+容器部署时，Consul 注册地址固定使用 `SERVICE_REGISTER_IP`。请显式传入宿主机实际可访问 IP，避免注册为容器内网地址或错误网卡地址；未提供时，`docker compose` 和应用 `prod` 启动都会直接失败并给出明确提示。
+
 ## Docker 部署
 
 仓库内已提供：
@@ -155,7 +161,8 @@ sh ./mvnw -pl auth-center-bootstrap -am clean package -DskipTests
 再通过 Docker Compose 启动：
 
 ```bash
-export CONSUL_HOST=你的 Consul 地址
+CONSUL_HOST=你的 Consul 地址 \
+SERVICE_REGISTER_IP=宿主机实际IP \
 docker compose up -d --build
 ```
 
@@ -166,6 +173,34 @@ docker compose up -d --build
 - 账号密码、JWT、端口等业务配置应在 Consul Config 中提前准备好
 - 本地只需要保证应用能连到 Consul
 - 当前容器暴露端口为 `8080` 和 `9090`
+- Consul 中会注册两个独立服务：HTTP 服务默认为 `auth-center-http`，RPC 服务默认为 `auth-center-rpc`
+- HTTP 服务使用 `/actuator/health` 做健康检查，RPC 服务使用 TCP 检查 `grpc.server.port`
+
+## 服务发现约定
+
+调用方不应再通过单个 `auth-center` 服务名加 metadata 推断端口，而应直接按协议区分服务名：
+
+- HTTP 调用发现 `auth-center-http`
+- RPC 调用发现 `auth-center-rpc`
+
+如需自定义服务名，可在提供方启动时显式传入：
+
+```bash
+APP_HTTP_SERVICE_NAME=custom-auth-http \
+APP_RPC_SERVICE_NAME=custom-auth-rpc \
+CONSUL_HOST=你的 Consul 地址 \
+SERVICE_REGISTER_IP=宿主机实际IP \
+docker compose up -d --build
+```
+
+消费端示例：
+
+- HTTP 基地址：`http://auth-center-http`
+- gRPC 目标：`auth-center-rpc:9090`（实际端口以 Consul 返回实例端口为准）
+
+更完整的 Java 消费端接入示例见：
+
+- [`docs/service-discovery-consumer-guide.md`](./docs/service-discovery-consumer-guide.md)
 
 ## 测试
 

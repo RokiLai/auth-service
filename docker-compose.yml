@@ -12,6 +12,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       CONSUL_HOST: ${CONSUL_HOST:-192.168.31.169}
       CONSUL_PORT: ${CONSUL_PORT:-8500}
+      SERVICE_REGISTER_IP: ${SERVICE_REGISTER_IP:?SERVICE_REGISTER_IP must be set to the host machine reachable IP}
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080'"]
       interval: 15s
