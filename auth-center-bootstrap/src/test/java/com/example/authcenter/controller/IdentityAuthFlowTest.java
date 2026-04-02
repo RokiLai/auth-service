@@ -1,9 +1,9 @@
 package com.example.authcenter.controller;
 
-import com.example.authcenter.config.JwtInterceptor;
-import com.example.authcenter.config.WebConfig;
-import com.example.authcenter.config.CurrentOperatorArgumentResolver;
 import com.example.authcenter.application.context.CurrentOperator;
+import com.example.authcenter.config.web.CurrentOperatorArgumentResolver;
+import com.example.authcenter.config.web.JwtInterceptor;
+import com.example.authcenter.config.web.WebConfig;
 import com.example.authcenter.domain.identity.model.entity.IdentityAccount;
 import com.example.authcenter.domain.identity.model.entity.IdentityAccountFactory;
 import com.example.authcenter.domain.identity.model.entity.IdentitySession;

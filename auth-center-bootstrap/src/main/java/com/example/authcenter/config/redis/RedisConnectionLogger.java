@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.redis;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

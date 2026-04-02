@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.grpc;
 
 import io.grpc.BindableService;
 import io.grpc.Server;

@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.consul;
 
 import com.ecwid.consul.v1.agent.model.NewService;
 import org.slf4j.Logger;

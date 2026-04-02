@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.consul;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor;

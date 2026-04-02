@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.consul;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

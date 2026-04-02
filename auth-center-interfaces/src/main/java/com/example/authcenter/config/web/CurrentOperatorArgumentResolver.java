@@ -1,4 +1,4 @@
-package com.example.authcenter.config;
+package com.example.authcenter.config.web;
 
 import com.example.authcenter.application.context.CurrentOperator;
 import com.example.authcenter.annotation.AuthIdentity;
