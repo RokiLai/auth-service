@@ -3,7 +3,6 @@ package com.example.authcenter.config.consul;
 import com.ecwid.consul.v1.agent.model.NewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryProperties;
 import org.springframework.cloud.consul.serviceregistry.ConsulAutoRegistration;
@@ -21,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Configuration
-@ConditionalOnBean(ConsulServiceRegistry.class)
 @ConditionalOnProperty(prefix = "app.consul.rpc-registration", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ConsulRpcRegistrationConfiguration {
 
