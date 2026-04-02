@@ -1,0 +1,10 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  cloud:
+    consul:
+      discovery:
+        register: true
+        ip-address: ${HOST_IP}
+        health-check-url: http://${spring.cloud.consul.discovery.ip-address}:${server.port}${spring.cloud.consul.discovery.health-check-path}

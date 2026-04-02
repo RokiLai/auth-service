@@ -104,16 +104,15 @@
 
 这个 profile 主要用于测试，不适合作为完整的本地运行环境。
 
-### `docker`
+### `prod`
 
-[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) 用于容器化部署，并保持与 `dev` 接近的 Consul 接入方式。
+[`auth-center-bootstrap/src/main/resources/application-prod.yml`](./auth-center-bootstrap/src/main/resources/application-prod.yml) 用于生产或容器化部署，并保持与 `dev` 接近的 Consul 接入方式。
 
 该 profile 会：
 
 - 开启 Consul Config 和 Consul Discovery
 - 将容器实例注册到 Consul
-- 优先通过 Consul 发现 MySQL 和 Redis
-- 同时保留环境变量形式的 MySQL / Redis 直连配置作为兜底
+- 通过 Consul 发现 MySQL 和 Redis，并覆盖直连地址配置
 - 使用 `8080` 暴露 HTTP 服务
 - 使用 `9090` 暴露 gRPC 服务
 
@@ -138,16 +137,17 @@
 
 ## 本地启动
 
-使用默认 `dev` profile 启动：
+默认会以 `dev` profile 启动，也可以显式指定：
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap -am clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap -am clean spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 显式指定 profile 启动：
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=docker
+sh ./mvnw -pl auth-center-bootstrap -am spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 启动类：
@@ -156,7 +156,7 @@ sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=d
 
 默认端口：
 
-- HTTP：`dev` 为 `8081`，`docker` 为 `8080`
+- HTTP：`dev` 为 `8081`，`prod` 为 `8080`
 - gRPC：`9090`
 
 ## Docker 部署
@@ -202,7 +202,7 @@ sh ./mvnw test
 运行指定模块测试：
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap test
+sh ./mvnw -pl auth-center-bootstrap -am test
 sh ./mvnw -pl auth-center-domain test
 ```
 
@@ -347,5 +347,5 @@ feat: 新增密码修改接口
 ## 当前注意点
 
 - `dev` 环境依赖外部 Consul、MySQL、Redis，仓库内默认地址更偏向局域网开发环境
-- `docker` profile 现在也会接入并注册到 Consul，部署时需要显式提供 `CONSUL_HOST` 和可被 Consul 回连的 `HOST_IP`
+- `prod` profile 会接入并注册到 Consul，部署时需要显式提供 `CONSUL_HOST` 和可被 Consul 回连的 `HOST_IP`
 - 仓库同时维护中英文两份 README，后续功能变更时需要同步更新

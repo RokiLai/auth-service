@@ -1,4 +1,71 @@
-# debug: true
+spring:
+  application:
+    name: auth-center
+  profiles:
+    default: dev
+  config:
+    import: "optional:consul:"
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:192.168.31.169}
+      port: ${CONSUL_PORT:8500}
+      config:
+        enabled: true
+        format: YAML
+        prefixes: config
+        default-context: application
+        profile-separator: "-"
+        data-key: data
+        watch:
+          enabled: true
+      discovery:
+        enabled: true
+        prefer-ip-address: true
+        service-name: ${spring.application.name}
+        health-check-path: /actuator/health
+        metadata:
+          grpc-port: ${grpc.server.port}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:auth}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000
+
+app:
+  backend-discovery:
+    enabled: true
+    mysql:
+      service-name: ${MYSQL_SERVICE_NAME:mysql-proxy-service}
+      database: ${MYSQL_DATABASE:auth}
+      jdbc-params: ${MYSQL_JDBC_PARAMS:useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false}
+    redis:
+      service-name: ${REDIS_SERVICE_NAME:redis-proxy-service}
+
+grpc:
+  server:
+    enabled: true
+    port: ${GRPC_SERVER_PORT:9090}
+
+mybatis:
+  type-aliases-package: com.example.authcenter.infra.identity.po
+  mapper-locations: classpath*:mapper/*.xml
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-your-256-bit-secret}
+  expire: ${JWT_EXPIRE:3600000}
+
+logging:
+  level:
+    com.example.authcenter: info
+    org.mybatis: info
+    org.apache.ibatis: info
+    org.springframework.cloud.consul: info
 
 roki:
   exception:

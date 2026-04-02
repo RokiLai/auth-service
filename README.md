@@ -104,16 +104,15 @@ Default values in the repository:
 
 This profile is intended for tests, not for a full local runtime.
 
-### `docker`
+### `prod`
 
-[`auth-center-bootstrap/src/main/resources/application-docker.yml`](./auth-center-bootstrap/src/main/resources/application-docker.yml) is the container deployment profile and keeps Consul integration aligned with `dev`.
+[`auth-center-bootstrap/src/main/resources/application-prod.yml`](./auth-center-bootstrap/src/main/resources/application-prod.yml) is the production and container deployment profile and keeps Consul integration aligned with `dev`.
 
 This profile:
 
 - enables Consul Config and Consul Discovery
 - registers the container instance into Consul
-- prefers resolving MySQL and Redis through Consul
-- keeps direct MySQL and Redis environment variables as fallback values
+- resolves MySQL and Redis through Consul and overrides direct connection properties
 - runs HTTP on `8080`
 - exposes gRPC on `9090`
 
@@ -138,16 +137,17 @@ Important environment variables:
 
 ## Run Locally
 
-Start the application with the default `dev` profile:
+The application now defaults to the `dev` profile, and you can also specify it explicitly:
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap -am clean spring-boot:run
+sh ./mvnw -pl auth-center-bootstrap -am clean spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 Start with an explicit profile:
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap spring-boot:run -Dspring-boot.run.profiles=docker
+sh ./mvnw -pl auth-center-bootstrap -am spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 Main class:
@@ -156,7 +156,7 @@ Main class:
 
 Default ports:
 
-- HTTP: `8081` in `dev`, `8080` in `docker`
+- HTTP: `8081` in `dev`, `8080` in `prod`
 - gRPC: `9090`
 
 ## Docker Deployment
@@ -202,7 +202,7 @@ sh ./mvnw test
 Run selected modules:
 
 ```bash
-sh ./mvnw -pl auth-center-bootstrap test
+sh ./mvnw -pl auth-center-bootstrap -am test
 sh ./mvnw -pl auth-center-domain test
 ```
 
@@ -347,5 +347,5 @@ feat: 新增密码修改接口
 ## Current Caveats
 
 - `dev` depends on external Consul, MySQL, and Redis services, and the default addresses in the repo are LAN-specific
-- the docker profile now also integrates with Consul, so deployment must provide both `CONSUL_HOST` and a Consul-reachable `HOST_IP`
+- the `prod` profile integrates with Consul, so deployment must provide both `CONSUL_HOST` and a Consul-reachable `HOST_IP`
 - the repository contains both English and Chinese README files and they should be kept in sync when capabilities change
