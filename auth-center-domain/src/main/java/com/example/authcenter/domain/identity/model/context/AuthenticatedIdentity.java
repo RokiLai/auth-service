@@ -5,6 +5,7 @@ import com.example.authcenter.domain.identity.model.entity.IdentitySession;
 
 public record AuthenticatedIdentity(
         IdentityAccount account,
-        IdentitySession session
+        IdentitySession session,
+        String token
 ) {
 }

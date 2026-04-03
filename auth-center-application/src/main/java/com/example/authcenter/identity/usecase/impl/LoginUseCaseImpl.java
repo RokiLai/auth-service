@@ -30,6 +30,6 @@ public class LoginUseCaseImpl implements LoginUseCase {
 
         // 应用层负责持久化会话，并把领域结果转换成接口返回对象。
         identitySessionRepository.save(session);
-        return new LoginResult(account.getId(), account.getUsername(), account.getEmail(), session.getToken());
+        return new LoginResult(account.getId(), account.getUsername(), account.getEmail(), authenticatedIdentity.token());
     }
 }

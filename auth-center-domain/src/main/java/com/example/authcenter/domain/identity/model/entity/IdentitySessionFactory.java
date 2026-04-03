@@ -9,8 +9,8 @@ public class IdentitySessionFactory {
      * 基于已认证账号创建新的登录会话，确保会话创建入口只保留在领域工厂里。
      * Creates a new login session for an authenticated account so session creation stays behind a dedicated domain factory.
      */
-    public IdentitySession createFor(IdentityAccount account, String sessionId, String token) {
-        return new IdentitySession(sessionId, account.getId(), account.getUsername(), token);
+    public IdentitySession createFor(IdentityAccount account, String sessionId) {
+        return new IdentitySession(sessionId, account.getId(), account.getUsername());
     }
 
     /**
@@ -19,8 +19,7 @@ public class IdentitySessionFactory {
      */
     public IdentitySession restore(String sessionId,
                                    Long accountId,
-                                   String username,
-                                   String token) {
-        return new IdentitySession(sessionId, accountId, username, token);
+                                   String username) {
+        return new IdentitySession(sessionId, accountId, username);
     }
 }

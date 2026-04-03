@@ -32,7 +32,7 @@ class LogoutUseCaseImplTest {
         when(identitySessionRepository.findSessionIdByAccountId(1L)).thenReturn("session-1");
 
         boolean loggedOut = logoutUseCase.logout(new LogoutCommand(
-                new CurrentOperator(1L, "tester", "session-1", null)
+                new CurrentOperator(1L, "tester", "session-1")
         ));
 
         assertThat(loggedOut).isTrue();

@@ -54,8 +54,8 @@ public class AuthenticationDomainServiceImpl implements AuthenticationDomainServ
         // 认证成功后生成新的会话标识和 token，并组装会话实体。
         String sessionId = UUID.randomUUID().toString();
         String token = identityTokenProvider.issue(account.getId(), username, sessionId);
-        IdentitySession session = identitySessionFactory.createFor(account, sessionId, token);
+        IdentitySession session = identitySessionFactory.createFor(account, sessionId);
 
-        return new AuthenticatedIdentity(account, session);
+        return new AuthenticatedIdentity(account, session, token);
     }
 }

@@ -28,7 +28,7 @@ class ValidateTokenUseCaseImplTest {
     void validateShouldReturnBasicUserInfoOfAuthenticatedToken() {
         String token = "token-value";
         when(authenticateUseCase.authenticate(token))
-                .thenReturn(new CurrentOperator(1L, "tester", "session-1", token));
+                .thenReturn(new CurrentOperator(1L, "tester", "session-1"));
 
         IdentityAccount account = identityAccountFactory.restore(
                 1L,

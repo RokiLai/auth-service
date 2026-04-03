@@ -143,7 +143,6 @@ class IdentityAuthFlowTest {
         assertThat(loginSession).isNotNull();
         assertThat(loginSession.getAccountId()).isEqualTo(1L);
         assertThat(loginSession.getUsername()).isEqualTo(username);
-        assertThat(loginSession.getToken()).isEqualTo(token);
 
         mockMvc.perform(post("/auth/logout")
                         .header("Authorization", BEARER_PREFIX + token))

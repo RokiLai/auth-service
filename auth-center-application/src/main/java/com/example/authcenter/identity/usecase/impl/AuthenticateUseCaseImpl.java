@@ -34,15 +34,14 @@ public class AuthenticateUseCaseImpl implements AuthenticateUseCase {
 
             IdentitySession session = identitySessionRepository.findBySessionId(sessionId);
             // JWT 合法还不够，必须同时命中当前有效会话，才能认为登录态有效。
-            if (session == null || !session.matchesToken(rawToken)) {
+            if (session == null) {
                 throw new TokenExpiredException();
             }
 
             return new CurrentOperator(
                     session.getAccountId(),
                     session.getUsername(),
-                    session.getSessionId(),
-                    session.getToken()
+                    session.getSessionId()
             );
         } catch (JwtException e) {
             throw new TokenInvalidException();

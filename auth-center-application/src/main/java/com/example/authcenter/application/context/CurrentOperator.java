@@ -7,7 +7,6 @@ package com.example.authcenter.application.context;
 public record CurrentOperator(
         Long id,
         String username,
-        String sessionId,
-        String token
+        String sessionId
 ) {
 }
