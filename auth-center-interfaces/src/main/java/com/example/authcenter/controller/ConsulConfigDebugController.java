@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RefreshScope
 @RestController
-@Tag(name = "Debug", description = "配置调试接口")
+@Tag(name = "Debug")
 @RequestMapping("/debug/config")
 public class ConsulConfigDebugController {
 
@@ -28,7 +28,7 @@ public class ConsulConfigDebugController {
     }
 
     @GetMapping("/consul")
-    @Operation(summary = "查看当前配置快照", description = "返回当前实例加载到的部分 Consul 配置，仅用于调试。")
+    @Operation(summary = "查看当前配置快照")
     public Map<String, Object> consul() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("applicationName", environment.getProperty("spring.application.name"));
